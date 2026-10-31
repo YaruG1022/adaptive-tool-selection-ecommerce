@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Little Signal Shop: an e-commerce simulation with warehouse animation, a research lab, and business replay.">
+  <title>Little Signal Shop</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js"></script>
+  <script defer src="i18n.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+<!-- Warehouse theatre prototype. The simulation creates a receipt first; animation plays it; the receipt is committed exactly once. -->
+<div id="signal-warehouse">
+ <div class="sw-game">
+  <header class="sw-top">
+   <div class="sw-brand"><span class="sw-logo"><i data-lucide="package-open" aria-hidden="true"></i></span><div><h2>小信号商店</h2><p>Little Signal · 开店，也看懂每一次决定</p></div></div>
+   <div class="sw-header-actions"><button type="button" data-language-toggle aria-label="Switch interface to Chinese" lang="zh-CN">中文</button><div class="sw-day">DAY <b data-day>28</b><span> / 90</span><p data-day-label>清晨 · 准备开店</p></div></div>
+  </header>
+  <nav class="sw-navigation" aria-label="游戏功能"><button data-view="shop" aria-pressed="true" id="sw-shop-label"><i data-lucide="store" aria-hidden="true"></i>仓库小剧场</button><button data-view="lab" aria-pressed="false" id="sw-lab-label"><i data-lucide="flask-conical" aria-hidden="true"></i>研究台</button><button data-view="replay" aria-pressed="false" id="sw-replay-label"><i data-lucide="history" aria-hidden="true"></i>经营回放</button><span data-nav-note>同一间小店，三个观察角度</span></nav>
+  <section data-screen="shop" aria-labelledby="sw-shop-label">
+  <div class="sw-stats">
+   <div><span>现金（Cash）</span><strong data-cash></strong></div>
+   <div><span>净资产（Net Worth）</span><strong data-worth></strong></div>
+   <div><span>累计调查费（Tool Cost）</span><strong data-fees></strong></div>
+   <div><span>累计发货</span><strong data-total>0 单</strong></div>
+  </div>
+  <div class="sw-layout">
+   <main class="sw-main">
+    <div class="sw-scene-title"><h3>今天，也要把每一单好好打包。</h3><span class="sw-badge" data-status>等待营业</span></div>
+    <div class="sw-world" aria-label="仓库小剧场：机器人拣货、打包、装车与补货入库" aria-busy="false">
+     <div class="sw-floor" aria-hidden="true"></div><div class="sw-window" aria-hidden="true"><span></span></div>
+     <div class="sw-wall-sign" aria-hidden="true"><span>SMALL SHOP, BIG DAYS</span><b>LITTLE SIGNAL</b><small>每个包裹，都带着一点期待。</small></div>
+     <div class="sw-door" aria-hidden="true"><span>快递收发口</span><i></i></div>
+     <div class="sw-shelf" aria-hidden="true"><span class="sw-location">现货货架</span><div class="sw-shelf-row" data-shelf="0"></div><div class="sw-shelf-row" data-shelf="1"></div><div class="sw-shelf-row" data-shelf="2"></div><div class="sw-shelf-legs"></div></div>
+     <div class="sw-desk" aria-hidden="true"><div class="sw-monitor"><span data-monitor>开店准备中</span></div><div class="sw-tape"></div><div class="sw-table-box sw-box" hidden></div><span class="sw-location">打包台</span><div class="sw-desk-leg"></div></div>
+     <div class="sw-mat" aria-hidden="true"></div>
+     <div class="sw-dispatch" aria-hidden="true"><span>待发区</span><div class="sw-outgoing"></div></div>
+     <div class="sw-robot" aria-hidden="true"><div class="sw-antenna"></div><div class="sw-head"><i></i><i></i><span></span></div><div class="sw-body"><b>S</b></div><div class="sw-arm sw-arm-left"></div><div class="sw-arm sw-arm-right"></div><div class="sw-feet"><i></i><i></i></div><div class="sw-carry sw-box" hidden></div></div>
+     <div class="sw-bubble" data-bubble>早上好！先看看今天的订单吧。</div>
+     <div class="sw-plant" aria-hidden="true"><i></i><i></i><span></span></div>
+     <div class="sw-order-stream" aria-hidden="true"></div>
+     <div class="sw-road" aria-hidden="true"><span>快递专用道 · 慢慢开，好好送</span></div>
+     <div class="sw-truck" aria-hidden="true"><div class="sw-truck-body"><span data-truck-sign>小信号快递</span><div class="sw-truck-cargo"></div></div><div class="sw-truck-cab"><i></i><b></b></div><div class="sw-wheel sw-wheel-back"></div><div class="sw-wheel sw-wheel-front"></div><div class="sw-truck-shadow"></div></div>
+     <div class="sw-flying-box sw-box" aria-hidden="true" hidden></div>
+     <div class="sw-dusk" aria-hidden="true"></div>
+     <div class="sw-scene-toast" data-scene-toast hidden></div>
+    </div>
+    <div class="sw-stage-strip" aria-label="营业进度"><span data-phase="orders"><i data-lucide="bell" aria-hidden="true"></i>收单</span><span data-phase="packing"><i data-lucide="package" aria-hidden="true"></i>打包</span><span data-phase="shipping"><i data-lucide="truck" aria-hidden="true"></i>发车</span><span data-phase="restock"><i data-lucide="warehouse" aria-hidden="true"></i>入库</span></div>
+    <div class="sw-live-line" aria-live="polite" data-live>明早有 18 副智能眼镜到货；今天先把现有订单送出去。</div>
+    <div class="sw-playback"><label>播放速度 <select data-speed aria-label="播放速度"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select></label><button data-pause disabled>暂停</button><button data-skip disabled>跳过本日动画</button><label class="sw-reduce"><input type="checkbox" data-reduce>减少动态效果</label></div>
+   </main>
+   <aside class="sw-panel" aria-label="经营事件和工具选择">
+    <div class="sw-overline">今日经营事件</div><h3 data-event-title></h3><p class="sw-copy" data-event-copy></p>
+    <div class="sw-tool-heading"><b>调查工具</b><span data-budget>0 / 2 次</span></div><div class="sw-tools"></div>
+    <div class="sw-result" data-result aria-live="polite"></div>
+    <button class="sw-secondary" data-investigate>让店长调查一次</button>
+    <button class="sw-primary" data-open><i data-lucide="play" aria-hidden="true"></i><span>停止调查，开始营业</span></button>
+    <div class="sw-receipt" data-receipt hidden aria-live="polite"></div>
+    <p class="sw-fine">店长使用演示规则（Demonstration Rules）。调查结果会影响补货与定价。</p>
+   </aside>
+  </div>
+  <div class="sw-products" aria-label="商品库存"></div>
+  <footer class="sw-footer"><div><h3>仓库日记</h3><ol data-journal></ol></div><div class="sw-detail"><h3>每一个动作，都有一笔生意。</h3><p>订单有货才打包；补货到期才入库。发车和收货完成后，统一更新当天账目。</p><p class="sw-fine">每个动画纸箱代表一批货，件数以文字为准。试玩从第 28 天开始，已有 18 件预付补货在途；第 90 天进行期末库存估值。</p></div></footer>
+  </section>
+  <section data-screen="lab" aria-labelledby="sw-lab-label" hidden>
+   <div class="sw-section-heading"><div><span class="sw-overline">把经营疑问变成可以比较的实验</span><h3>什么时候，额外的信息值得花钱？</h3></div><span class="sw-badge">本地模拟 · 90 天 / 回合</span></div>
+   <div class="sw-lab-layout">
+    <aside class="sw-lab-settings"><h3>实验设置</h3><p class="sw-fine">固定经营规则、起始现金 $5,000 和相同库存；只改变信息获取方式。</p>
+     <label>预测可靠度（Forecast Reliability）<select data-config="accuracy"><option value="0.9">高 · 预测误差较小</option><option value="0.75" selected>中 · 预测含有噪声</option><option value="0.4">低 · 预测波动较大</option></select></label>
+     <label>市场波动（Market Volatility）<select data-config="volatility"><option value="0.5">平稳 · 0.5×</option><option value="1" selected>日常起伏 · 1×</option><option value="1.7">风云变幻 · 1.7×</option></select></label>
+     <label>工具费用（Tool Cost）<select data-config="feeScale"><option value="0.5">较低 · 0.5×</option><option value="1" selected>标准 · 1×</option><option value="2">昂贵 · 2×</option></select></label>
+     <label>市场种子（Market Seeds）<select data-config="seeds"><option value="3" selected>3 个 · 快速试玩</option><option value="6">6 个 · 多次比较</option><option value="12">12 个 · 更完整的分布</option></select></label>
+     <div class="sw-setting-note">每天最多调查 2 次。三个方法共用相同的市场种子；预测可靠度控制误差范围。</div>
+     <button class="sw-primary" data-lab-run><i data-lucide="play" aria-hidden="true"></i>重新运行对比</button><div class="sw-lab-actions"><button data-lab-pause disabled>暂停实验</button><button data-lab-stop disabled>结束实验</button></div>
+     <div class="sw-model-note"><b>学习模型还没有接入</b><p>深度 Q 网络（Deep Q-Network, DQN）尚未训练。这里展示三个固定规则方法的真实模拟结果。</p></div>
+    </aside>
+    <main class="sw-lab-results">
+     <div class="sw-run-header"><div><h3 data-lab-status>正在准备示范实验</h3><p class="sw-fine" data-lab-detail></p></div><span class="sw-badge" data-lab-count></span></div>
+     <div class="sw-run-track" role="progressbar" aria-label="实验完成进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+     <p class="sw-fine sw-config-summary" data-config-summary></p>
+     <div class="sw-plot-heading"><h3>经营曲线（Net Worth Trajectory）</h3><span class="sw-fine">已完成回合的每日均值</span></div>
+     <div class="sw-plot" aria-label="三个工具选择方法的净资产经营曲线"></div><div class="sw-legend"><span><i data-line="none"></i>不调查</span><span><i data-line="always"></i>用满调查预算</span><span><i data-line="rules"></i>固定规则</span></div>
+     <div class="sw-result-heading"><h3>对比结果</h3><span class="sw-fine">点击回放查看首个市场种子的记录</span></div>
+     <div class="sw-table-scroll"><table class="sw-result-table"><thead><tr><th>信息获取方式</th><th>期末净资产<br><small>均值 ± 标准差</small></th><th>平均工具费</th><th>平均缺货单</th><th>回放</th></tr></thead><tbody data-lab-table></tbody></table></div>
+     <p class="sw-fine sw-research-footnote">标准差（Standard Deviation）描述不同市场种子的结果差异。这里只做简化模拟与界面演示；曲线不是训练曲线，也不代表已验证的研究结论。</p>
+    </main>
+   </div>
+  </section>
+  <section data-screen="replay" aria-labelledby="sw-replay-label" hidden>
+   <div class="sw-section-heading"><div><span class="sw-overline">沿着一笔生意，回看当时发生了什么</span><h3>经营回放（Business Replay）</h3></div><span class="sw-badge">只读 · 不改变当前小店</span></div>
+   <div class="sw-replay-toolbar"><label>记录来源<select data-replay-source></select></label><label>营业日期<select data-replay-day></select></label><button data-replay-prev aria-label="前一天">← 前一天</button><button data-replay-next aria-label="后一天">后一天 →</button></div>
+   <div class="sw-replay-layout"><div><div data-replay-stage></div><div class="sw-replay-transport"><button class="sw-primary" data-replay-play><i data-lucide="play" aria-hidden="true"></i><span>播放这一天</span></button><span class="sw-fine">使用原始记录播放，不重新抽取市场结果。</span></div></div>
+    <aside class="sw-replay-notes"><div class="sw-overline" data-replay-source-label></div><h3 data-replay-title></h3><p class="sw-copy" data-replay-event></p><div class="sw-replay-ledger" data-replay-ledger></div><h3>当时的决策依据</h3><p class="sw-replay-reason" data-replay-reason></p><h3>信息获取记录</h3><div class="sw-tool-trace" data-tool-trace></div><details class="sw-after-fact"><summary>事后对照（Post Hoc Comparison）</summary><p class="sw-fine">以下真实需求仅供回顾，没有直接提供给经营决策。</p><div data-replay-truth></div></details></aside>
+   </div>
+  </section>
+  <div class="sw-fine sw-bottom">交互原型（Interactive Prototype） · 合成经营数据 · 支持暂停、加速及减少动态效果</div>
+ </div>
+</div>
+<noscript>Enable JavaScript to run the game. 请启用浏览器的 JavaScript（脚本语言）以运行游戏。</noscript>
+</body>
+</html>
