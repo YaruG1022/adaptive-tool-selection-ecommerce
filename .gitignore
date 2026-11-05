@@ -5,3 +5,13 @@ node_modules/
 .DS_Store
 Thumbs.db
 output/
+
+# Future Python research environment
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Generated research and verification output
+artifacts/*
+!artifacts/README.md
