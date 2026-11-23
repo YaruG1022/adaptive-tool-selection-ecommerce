@@ -14,6 +14,8 @@
  const active=new Set();q('[data-reduce]').checked=reduced;
  const sceneMain=q('.sw-main'),shopSlot=q('.sw-layout'),liveRun={id:'live',name:'当前小店 · 手动经营',records:[]};
  const replayRuns=new Map([['live',liveRun]]);let activeView='shop',replayRunId='demo-rules',replayIndex=27;
+ const researchView=globalThis.LittleSignalResearchView;
+ let readingResearch=false;
  const methodNames={none:'不调查',always:'用满调查预算',rules:'固定规则'};
  const lab={running:false,paused:false,stopped:false,token:0,done:0,total:0,config:null,samples:{none:[],always:[],rules:[]},status:'示范实验已完成'};
  function icons(){if(globalThis.lucide)lucide.createIcons({attrs:{width:18,height:18}})}
@@ -35,8 +37,11 @@
   q('[data-open]').disabled=busy||s.finished;q('[data-open] span').textContent=busy?'小店正在营业…':s.finished?'90 天经营完成':'停止调查，开始营业';
   q('[data-pause]').disabled=!busy||reduced;q('[data-pause]').textContent=paused?'继续':'暂停';q('[data-skip]').disabled=!busy;
   q('.sw-world').setAttribute('aria-busy',String(busy));
-  all('[data-view]').forEach(b=>b.disabled=busy);all('[data-replay-source],[data-replay-day],[data-replay-prev],[data-replay-next]').forEach(b=>b.disabled=busy);
+  all('[data-view]').forEach(b=>b.disabled=busy);all('[data-replay-source],[data-replay-day]').forEach(b=>b.disabled=busy);
+  const days=replayRuns.get(replayRunId)?.records.length||0;
+  q('[data-replay-prev]').disabled=busy||replayIndex===0;q('[data-replay-next]').disabled=busy||replayIndex>=days-1;
   q('[data-replay-play]').disabled=busy||!currentRecord();
+  q('[data-research-file]').disabled=busy||readingResearch;
  }
  function phase(name,text,bubble){all('[data-phase]').forEach(n=>n.dataset.active=String(n.dataset.phase===name));q('[data-live]').textContent=text;q('[data-status]').textContent=({orders:'新订单来了',packing:'机器人打包中',shipping:'快递发车',restock:'补货入库',closing:'收工盘点',ready:'准备营业'})[name]||'准备营业';q('[data-bubble]').textContent=bubble||text;}
  function toast(text){q('[data-scene-toast]').hidden=false;q('[data-scene-toast]').textContent=text;}
@@ -81,7 +86,7 @@
  }
  async function playDay(r){
   q('[data-day-label]').textContent='白天 · 开门接单';phase('orders',`第 ${r.day} 天收到 ${r.sold+r.missed} 单，其中 ${r.sold} 单有货可发。`,'叮！新订单来啦，开始忙起来。');
-  const stream=q('.sw-order-stream');stream.innerHTML=r.orders.map(o=>`<span class="sw-ticket">${products[o.i].name} × ${o.qty}</span>`).join('');
+  const stream=q('.sw-order-stream');stream.innerHTML=r.orders.map(o=>`<span class="sw-ticket">${r.researchDay?'研究商品':products[o.i].name} × ${o.qty}</span>`).join('');
   await Promise.all([...stream.children].map((n,i)=>animate(n,[{transform:'translateY(-35px) rotate(-5deg)',opacity:0},{transform:'translateY(0) rotate(0deg)',opacity:1}],520,{delay:i*150})));await wait(500);stream.innerHTML='';
   if(r.sold){
    phase('packing',`机器人准备拣货，共 ${r.sold} 单。`,'货架取货，核对订单，再封好箱子。');await walk('shelf');q('.sw-carry').hidden=false;await wait(250);await walk('bench');q('.sw-carry').hidden=true;
@@ -89,9 +94,11 @@
    for(let i=0;i<batches;i++){q('[data-monitor]').textContent='打包 '+Math.round(r.sold*(i+1)/batches)+' / '+r.sold;await sealPackage();const {w,h}=dimensions();await transfer([w*.48+75,207],[w*.79,h-148],520);q('.sw-table-box').hidden=true;out.innerHTML+=parcel();}
    phase('shipping',`${r.sold} 单已封箱，等待快递装车。`,'这一车，装着大家期待的小东西。');q('[data-day-label]').textContent='傍晚 · 装车发货';await driveIn();await walk('dock');q('.sw-carry').hidden=false;
    for(let i=0;i<Math.min(3,r.orders.length);i++){const {w,h}=dimensions();await transfer([w*.8,h-148],[truck().offsetLeft+35,truck().offsetTop+25],470);setTruckCargo(i+1);if(out.firstChild)out.firstChild.remove();}
-   q('.sw-carry').hidden=true;toast(r.sold+' 单已装车 · 本日销售收入 '+money(r.revenue));await wait(400);await driveOut();out.innerHTML='';
+   const revenue=r.researchDay?researchView.cents(r.researchDay.settlement.revenue_cents):money(r.revenue);
+   q('.sw-carry').hidden=true;toast(r.sold+' 单已装车 · 本日销售收入 '+revenue);await wait(400);await driveOut();out.innerHTML='';
   }else{phase('packing','今天没有可发的订单，机器人检查空货架。','没有现货可发，记得安排补货。');await walk('shelf');await wait(650);}
-  phase('closing',`第 ${r.day} 天收工：日常与仓储 ${money(r.cost)}，采购 ${money(r.spent)}。`,'打包台收拾好，明天继续。');q('[data-monitor]').textContent='今日已发 '+r.sold;await walk('home');
+  const closing=r.researchDay?'已按研究记录结算。':`第 ${r.day} 天收工：日常与仓储 ${money(r.cost)}，采购 ${money(r.spent)}。`;
+  phase('closing',closing,'打包台收拾好，明天继续。');q('[data-monitor]').textContent='今日已发 '+r.sold;await walk('home');
   await animate(q('.sw-dusk'),[{opacity:0},{opacity:.35},{opacity:0}],900);q('[data-scene-toast]').hidden=true;
   if(!r.next.finished&&r.arrived){
    phase('restock',`第 ${r.next.day} 天清晨：${r.arrived} 件补货到达，正在卸货入库。`,'补货车来啦！清点数量，搬上货架。');q('[data-day-label]').textContent='次日清晨 · 补货到达';await driveIn(true);await walk('dock');q('.sw-carry').hidden=false;
@@ -113,7 +120,20 @@
   }
  }
  function finishActive(){for(const a of active){try{a.finish()}catch{a.cancel()}}}
- function currentRecord(){return replayRuns.get(replayRunId)?.records[replayIndex]||null}
+ function currentRecord(){
+  const run=replayRuns.get(replayRunId),record=run?.records[replayIndex];
+  if(!record||!run.episode)return record||null;
+  const closed=record.settlement;
+  const tomorrow=run.records[replayIndex+1]?.settlement;
+  const arrived=tomorrow?.received_units||0;
+  return {
+   day:closed.day,sold:closed.sold_units,missed:closed.unfilled_units,arrived,
+   orders:closed.sold_units?[{i:0,qty:closed.sold_units}]:[],arrivals:arrived?[{i:0,qty:arrived}]:[],
+   before:{stock:[closed.opening_stock,0,0]},
+   next:{day:tomorrow?.day||closed.day,stock:[closed.closing_stock+arrived,0,0],finished:!tomorrow},
+   researchDay:record,
+  };
+ }
  function resetScene(state){
   q('.sw-carry').hidden=true;q('.sw-table-box').hidden=true;q('.sw-flying-box').hidden=true;q('.sw-outgoing').innerHTML='';q('.sw-order-stream').innerHTML='';q('[data-scene-toast]').hidden=true;q('.sw-dusk').style.opacity=0;
   const home=position('home');robot().style.left=home[0]+'px';robot().style.top=home[1]+'px';truck().style.left=position('outside')[0]+'px';
@@ -130,28 +150,121 @@
  function refreshReplaySources(){
   const available=[...replayRuns.values()].filter(r=>r.records.length);
   if(!replayRuns.get(replayRunId)?.records.length)replayRunId=available.find(r=>r.id==='demo-rules')?.id||available[0]?.id||'live';
-  q('[data-replay-source]').innerHTML=available.length?available.map(r=>`<option value="${r.id}" ${r.id===replayRunId?'selected':''}>${r.name}</option>`).join(''):'<option value="live">暂无完整记录</option>';
+  const select=q('[data-replay-source]');
+  const options=available.map(run=>{
+   const option=document.createElement('option');option.value=run.id;
+   if(run.episode)researchView.setText(option,researchView.seriesLabel(run.episode));
+   else option.textContent=run.name;
+   return option;
+  });
+  if(!options.length)options.push(new Option('暂无完整记录','live'));
+  select.replaceChildren(...options);select.value=replayRunId;
+ }
+ function renderResearchDay(run,r){
+  const day=r.researchDay,closed=day.settlement,episode=run.episode;
+  const {setText,cents,clock,toolNames}=researchView;
+  setText(q('[data-replay-source-label]'),researchView.seriesLabel(episode));
+  const identity=`${episode.controller_id} · ${episode.model_id?`${episode.model_id} · `:''}${episode.input_id}`;
+  setText(q('[data-replay-event]'),[`策略、模型与市场输入：${identity}`,`Policy, model and market input: ${identity}`]);
+  const ledger=q('[data-replay-ledger]');ledger.replaceChildren();
+  const toolFees=sum(day.tools.map(tool=>tool.fee_cents));
+  const values=[
+   [['期初现金 → 期末现金','Opening → closing cash'],`${cents(day.opening_cash_cents)} → ${cents(closed.cash_cents)}`],
+   [['当日净资产变化','Daily net worth change'],cents(closed.net_worth_cents-day.opening_net_worth_cents)],
+   [['工具费','Tool fees'],cents(toolFees)],
+   [['销售收入 / 采购付款','Revenue / procurement'],`${cents(closed.revenue_cents)} / ${cents(closed.purchase_cents)}`],
+   [['发货 / 缺货件数','Shipped / unfilled units'],`${r.sold} / ${r.missed}`],
+   [['到货 / 新订购 / 期末在途','Received / ordered / in transit'],`${closed.received_units} / ${closed.ordered_units} / ${closed.in_transit_units}`],
+   [['日末库存 / 期末估值减记','Closing stock / terminal write-down'],`${closed.closing_stock} / ${cents(closed.terminal_write_down_cents)}`],
+  ];
+  for(const [label,value] of values){
+   const row=document.createElement('div'),name=document.createElement('span'),amount=document.createElement('b');
+   setText(name,label);amount.textContent=value;row.append(name,amount);ledger.append(row);
+  }
+  const reason=day.stop_minute===null?[
+   '最后一天只收货、销售和结算。','The final day records delivery, sales, and settlement.',
+  ]:[
+   `公开需求估计：当日 ${day.public_today} 件，次日 ${day.public_tomorrow} 件。${clock(day.stop_minute)} 停止调查，固定补货规则订购 ${closed.ordered_units} 件。`,
+   `Public demand estimates: ${day.public_today} units today, ${day.public_tomorrow} tomorrow. Investigation stopped at ${clock(day.stop_minute)}; the fixed rule ordered ${closed.ordered_units} units.`,
+  ];
+  setText(q('[data-replay-reason]'),reason);
+  const trace=q('[data-tool-trace]');trace.replaceChildren();
+  if(!day.tools.length){
+   const entry=document.createElement('div');setText(entry,['当天未调用付费工具。','No paid tools were called that day.']);trace.append(entry);
+  }
+  for(const tool of day.tools){
+   const entry=document.createElement('div'),name=toolNames[tool.id];
+   const timing=`${clock(tool.start_minute)}–${clock(tool.end_minute)} · ${cents(tool.fee_cents)}`;
+   setText(entry,[`${name[0]} · ${timing} · 估计 ${tool.estimate} 件`,`${name[1]} · ${timing} · Estimate ${tool.estimate} units`]);trace.append(entry);
+  }
+  setText(q('[data-replay-truth]'),[
+   `实际需求 ${day.demand} 件，发出 ${r.sold} 件，售价 ${cents(run.config.selling_price_cents)}。`,
+   `Realized demand: ${day.demand} units. Shipped: ${r.sold} units. Selling price: ${cents(run.config.selling_price_cents)}.`,
+  ]);
  }
  function renderReplay(){
+  for(const selector of ['[data-replay-source-label]','[data-replay-event]','[data-replay-reason]','[data-replay-truth]']){
+   delete q(selector).dataset.i18nZh;delete q(selector).dataset.i18nEn;
+  }
   const run=replayRuns.get(replayRunId);if(!run?.records.length){q('[data-replay-day]').innerHTML='<option>暂无日期</option>';q('[data-replay-title]').textContent='还没有完整的经营记录';q('[data-replay-event]').textContent='先让小店营业一天，或在研究台完成至少一个回合。';q('[data-replay-ledger]').innerHTML='';q('[data-tool-trace]').innerHTML='';q('[data-replay-reason]').textContent='完整记录会出现在这里。';q('[data-replay-truth]').innerHTML='';q('[data-replay-source-label]').textContent='等待记录';q('[data-day]').textContent=s.day;q('[data-day-label]').textContent='当前小店状态已保留';resetScene(s);phase('ready','还没有完整记录，先让小店营业一天。','等有了经营记录，就能回看这一天。');syncControls();q('[data-replay-prev]').disabled=true;q('[data-replay-next]').disabled=true;return}
   replayIndex=Math.max(0,Math.min(replayIndex,run.records.length-1));const r=currentRecord();
-  q('[data-replay-day]').innerHTML=run.records.map((record,i)=>`<option value="${i}" ${i===replayIndex?'selected':''}>第 ${record.day} 天 · ${record.sold} 单</option>`).join('');
+  q('[data-replay-day]').innerHTML=run.records.map((record,i)=>`<option value="${i}" ${i===replayIndex?'selected':''}>第 ${record.settlement?.day??record.day} 天 · ${record.settlement?.sold_units??record.sold} 单</option>`).join('');
+  q('[data-replay-title]').textContent='第 '+r.day+' 天 · '+r.sold+' 单出发';
+  if(run.episode)renderResearchDay(run,r);
+  else{
   q('[data-replay-source-label]').textContent=run.id==='live'?'当前小店 · 已完成的经营记录':'实验记录 · '+run.name;
-  q('[data-replay-title]').textContent='第 '+r.day+' 天 · '+r.sold+' 单出发';q('[data-replay-event]').textContent=r.event;
+  q('[data-replay-event]').textContent=r.event;
   q('[data-replay-ledger]').innerHTML=`<div><span>期初现金 → 期末现金</span><b>${money(r.openingCash)} → ${money(r.next.cash)}</b></div><div><span>当日净资产变化</span><b>${money(worth(r.next)-r.openingWorth)}</b></div><div><span>工具费 / 日常与仓储</span><b>${money(r.toolFees)} / ${money(r.cost)}</b></div><div><span>销售收入 / 采购付款</span><b>${money(r.revenue)} / ${money(r.spent)}</b></div><div><span>发货 / 缺货订单</span><b>${r.sold} / ${r.missed}</b></div><div><span>次日入库</span><b>${r.arrived} 件</b></div>`;
   q('[data-replay-reason]').textContent=r.reason;
   q('[data-tool-trace]').innerHTML=r.before.toolLog.length?r.before.toolLog.map(t=>`<div>${tools[t.i].name} · ${money(t.fee)} / ${t.time} 小时<span>${t.text}</span></div>`).join(''):'<div>直接经营<span>这一天没有付费获取额外信息。</span></div>';
   q('[data-replay-truth]').innerHTML=r.lines.map(l=>`<p>${products[l.i].name}：实际请求 ${l.demand} 件，发出 ${l.qty} 件，售价 ${money(l.price)}。</p>`).join('');
+  }
   if(activeView==='replay'){
    q('[data-day]').textContent=r.day;q('[data-day-label]').textContent='历史记录 · 只读回放';resetScene(r.before);q('.sw-scene-title h3').textContent='第 '+r.day+' 天 · 回到那次经营现场';
    phase('ready','已载入原始记录：可查看当时信息，也可以播放当天动画。','那一天，我们是这样把生意做下去的。');q('[data-status]').textContent='历史回放';q('[data-monitor]').textContent='历史第 '+r.day+' 天';
   }
-  syncControls();q('[data-replay-prev]').disabled=busy||replayIndex===0;q('[data-replay-next]').disabled=busy||replayIndex===run.records.length-1;
+  syncControls();
  }
  async function playReplay(){
   const r=currentRecord();if(busy||activeView!=='replay'||!r)return;
   busy=true;paused=false;skipping=false;resetScene(r.before);syncControls();
   try{await playDay(r)}finally{finishActive();busy=false;paused=false;skipping=false;resetScene(r.next);q('[data-day]').textContent=r.day;q('[data-day-label]').textContent='历史记录 · 回放完成';phase('ready',`第 ${r.day} 天回放结束：发出 ${r.sold} 单，次日入库 ${r.arrived} 件。`,'这一段故事播放完了，当前小店没有变化。');q('[data-status]').textContent='回放完成';q('[data-monitor]').textContent='原记录 '+r.sold+' 单';syncControls();}
+ }
+ async function importResearch(file){
+  if(!file||readingResearch||busy)return;
+  const status=q('[data-research-status]');
+  readingResearch=true;syncControls();status.dataset.state='loading';
+  researchView.setText(status,['正在校验研究记录…','Validating research records…']);
+  try{
+   if(file.size>64*1024*1024)throw new Error('size');
+   const bundle=globalThis.LittleSignalResearch.parse(await file.text());
+   if(busy)throw new Error('busy');
+   const preview=document.createElement('div');
+   researchView.render(preview,bundle);
+   const selected=replayRuns.get(replayRunId)?.episode;
+   let retainedSelection=false;
+   for(const [id,run] of replayRuns)if(run.episode)replayRuns.delete(id);
+   bundle.episodes.forEach((episode,index)=>{
+    const id=`research-${index}`;
+    replayRuns.set(id,{id,episode,records:episode.days,config:bundle.run.config});
+    if(selected&&episode.seed===selected.seed&&episode.input_id===selected.input_id&&episode.controller_id===selected.controller_id&&episode.model_id===selected.model_id){
+     replayRunId=id;retainedSelection=true;
+    }
+   });
+   if(selected&&!retainedSelection){replayRunId='demo-rules';replayIndex=27}
+   const results=q('[data-research-results]');
+   results.replaceChildren(...preview.childNodes);results.hidden=false;
+   refreshReplaySources();if(activeView==='replay')renderReplay();
+   status.dataset.state='success';
+   researchView.setText(status,[`已导入 ${bundle.episodes.length} 个研究回合。`,`Imported ${bundle.episodes.length} research episodes.`]);
+  }catch(error){
+   status.dataset.state='error';
+   const messages={
+    size:['无法导入。请选择不超过 64 MiB 的研究记录文件。','Could not import this file. Choose a research file up to 64 MiB.'],
+    busy:['无法导入。请在播放结束后重新选择文件。','Could not import this file. Choose it again after playback ends.'],
+   };
+   researchView.setText(status,messages[error.message]||['无法导入。请检查研究记录的版本、格式及账目。','Could not import this file. Check the research record version, format, and ledger.']);
+  }finally{readingResearch=false;q('[data-research-file]').value='';syncControls()}
  }
  function newTrial(){return {day:1,cash:5000,stock:[36,25,9],pending:[],calls:[],toolLog:[],time:0,fees:0,sales:0,lost:0,total:0,estimate:null,quote:null,finished:false,result:'',logs:[]}}
  function applyMethod(state,method,config){
@@ -202,7 +315,7 @@
   if(!lab.running)q('[data-lab-detail]').textContent='每回合独立经营 90 天；不播放仓库动画，经营规则保持一致。';
   updateProgress();const c=lab.config;if(c)q('[data-config-summary]').textContent=`当前结果：预测可靠度 ${Math.round(c.accuracy*100)} / 100 · 市场波动 ${c.volatility}× · 工具费 ${c.feeScale}× · 种子 101—${100+c.seeds}`;
   all('[data-config]').forEach(n=>n.disabled=lab.running);q('[data-lab-run]').disabled=lab.running;q('[data-lab-pause]').disabled=!lab.running;q('[data-lab-stop]').disabled=!lab.running;q('[data-lab-pause]').textContent=lab.paused?'继续实验':'暂停实验';
-  q('[data-lab-table]').innerHTML=Object.keys(methodNames).map(method=>{const a=lab.samples[method],v=a.map(t=>t.worth);return `<tr><td>${methodNames[method]}<small>${a.length} 个完整回合</small></td><td>${a.length?money(average(v))+'<small>± '+money(deviation(v))+'</small>':'等待完成'}</td><td>${a.length?money(average(a.map(t=>t.fees))):'—'}</td><td>${a.length?average(a.map(t=>t.missed)).toFixed(1):'—'}</td><td><button data-trace="${method}" ${replayRuns.has('demo-'+method)?'':'disabled'}>回放 →</button></td></tr>`}).join('')+'<tr><td>学习控制器<small>DQN</small></td><td colspan="4">尚未接入 · 不生成模型成绩</td></tr>';
+  q('[data-lab-table]').innerHTML=Object.keys(methodNames).map(method=>{const a=lab.samples[method],v=a.map(t=>t.worth);return `<tr><td>${methodNames[method]}<small>${a.length} 个完整回合</small></td><td>${a.length?money(average(v))+'<small>± '+money(deviation(v))+'</small>':'等待完成'}</td><td>${a.length?money(average(a.map(t=>t.fees))):'—'}</td><td>${a.length?average(a.map(t=>t.missed)).toFixed(1):'—'}</td><td><button data-trace="${method}" ${replayRuns.has('demo-'+method)?'':'disabled'}>回放 →</button></td></tr>`}).join('');
   drawPlot();
  }
  function drawPlot(){
@@ -217,6 +330,10 @@
  root.addEventListener('click',ev=>{
   const b=ev.target.closest('button');if(!b||b.disabled)return;
   if(b.hasAttribute('data-view'))setView(b.dataset.view);
+  else if(b.hasAttribute('data-research-trace')){
+   const run=[...replayRuns.values()].find(run=>run.episode?.controller_id===b.dataset.researchTrace);
+   if(run){replayRunId=run.id;replayIndex=0;setView('replay')}
+  }
   else if(b.hasAttribute('data-trace')){replayRunId='demo-'+b.dataset.trace;replayIndex=27;setView('replay')}
   else if(b.hasAttribute('data-replay-prev')){replayIndex--;renderReplay()}
   else if(b.hasAttribute('data-replay-next')){replayIndex++;renderReplay()}
@@ -232,6 +349,7 @@
  });
  q('[data-replay-source]').addEventListener('change',ev=>{replayRunId=ev.target.value;replayIndex=0;renderReplay()});
  q('[data-replay-day]').addEventListener('change',ev=>{replayIndex=Number(ev.target.value);renderReplay()});
+ q('[data-research-file]').addEventListener('change',ev=>importResearch(ev.target.files[0]));
  all('[data-config]').forEach(n=>n.addEventListener('change',()=>{q('[data-lab-detail]').textContent='设置已更改。下方仍显示上一次结果，重新运行后更新。'}));
  q('[data-speed]').addEventListener('change',ev=>{speed=Number(ev.target.value);for(const a of active)a.updatePlaybackRate(speed)});
  q('[data-reduce]').addEventListener('change',ev=>{reduced=ev.target.checked;if(reduced){paused=false;finishActive()}syncControls()});

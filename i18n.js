@@ -64,6 +64,9 @@
   '标准差（Standard Deviation）描述不同市场种子的结果差异。这里只做简化模拟与界面演示；曲线不是训练曲线，也不代表已验证的研究结论。':'Standard deviation describes variation across market seeds. This is a simplified simulation and interface prototype. These are business trajectories, not training curves or validated research findings.',
   '沿着一笔生意，回看当时发生了什么':'Follow an order back to the decisions behind it',
   '经营回放（Business Replay）':'Business replay', '只读 · 不改变当前小店':'Read-only · Live store stays unchanged',
+  '导入研究记录':'Import research records', '选择 Python 导出的 JSON。在此浏览器中查看结果与回放。':'Choose a JSON file exported from Python to view results and replay in this browser.',
+  '研究记录文件':'Research records file', '浏览器示范实验':'Browser demonstration', '研究商品':'Research product',
+  '已按研究记录结算。':'Settled using the research record.',
   '记录来源':'Recording', '营业日期':'Business day', '← 前一天':'← Previous', '后一天 →':'Next →',
   '前一天':'Previous day', '后一天':'Next day', '播放这一天':'Play this day',
   '使用原始记录播放，不重新抽取市场结果。':'Plays the original receipt. No new market outcomes are sampled.',
@@ -217,7 +220,9 @@
    if(node.parentElement?.closest('script,style,[data-language-toggle]'))continue;
    let record=originals.get(node);
    if(!record||node.nodeValue!==record.rendered)record={source:node.nodeValue};
-   const rendered=transform(record.source);if(node.nodeValue!==rendered)node.nodeValue=rendered;
+   const pair=node.parentElement?.dataset;
+   const rendered=pair?.i18nEn!==undefined?(language==='en'?pair.i18nEn:pair.i18nZh):transform(record.source);
+   if(node.nodeValue!==rendered)node.nodeValue=rendered;
    record.rendered=rendered;originals.set(node,record);
   }
   for(const el of root.querySelectorAll('[aria-label],[title],[alt],[placeholder]')){
@@ -232,7 +237,8 @@
   observer.observe(root,settings);
  }
  function setLanguage(next){language=next==='zh'?'zh':'en';refresh()}
+ function setText(node,zh,en){node.dataset.i18nZh=zh;node.dataset.i18nEn=en;node.textContent=language==='en'?en:zh}
  root.querySelector('[data-language-toggle]')?.addEventListener('click',()=>setLanguage(language==='en'?'zh':'en'));
- window.signalI18n=Object.freeze({getLanguage:()=>language,setLanguage,refresh});
+ window.signalI18n=Object.freeze({getLanguage:()=>language,setLanguage,setText,refresh});
  refresh();
 })();

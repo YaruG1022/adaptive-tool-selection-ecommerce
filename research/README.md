@@ -71,6 +71,17 @@ Use `--inputs artifacts/phase5-held-out/market_inputs.json` to replay the saved 
 
 See the [training and selection report](../docs/dqn-v1-training.md) and [held-out evaluation report](../docs/held-out-v1-results.md).
 
+## Export research records for the browser
+
+From the repository root, export a saved comparison and optionally attach the matching training validation history. Use a new output filename.
+
+```powershell
+$env:PYTHONPATH = (Resolve-Path 'research/src').Path
+python -B -m little_signal_shop.experiments.export_browser --run artifacts/phase5-held-out --training artifacts/phase4-dqn --output artifacts/phase6-research-v1.json
+```
+
+Open root `index.html`, choose **Research Lab**, and select the exported JSON under **Import research records**. The imported table includes one replay button per policy. Use the **Record source** menu in Business Replay to switch markets or learning seeds. Research input stays in browser memory until reload. The exporter accepts validation or held-out runs, and `--training` attaches validation-at-checkpoint history to the matching held-out run. See the [bundle contract](../contracts/browser-bundle-v1.md).
+
 ## Package layout
 
 ```text
@@ -80,9 +91,9 @@ research/
     environment/                    World transitions, accounting, information tools, observations, rewards
     policies/                       The fixed operational business policy
     controllers/                    Three fixed baselines and the DQN controller
-    experiments/                    Baseline comparison, DQN training, and held-out evaluation
+    experiments/                    Comparison, training, held-out evaluation, and browser export
 ```
 
 The environment owns hidden market state. The controller receives only decision-time observations, and every controller uses the same replenishment rule.
 
-Keep generated runs, checkpoints, and exports under root `artifacts/`. The Phase 5 episode archives provide source records for the next phase's browser integration.
+Keep generated runs, checkpoints, and browser bundles under root `artifacts/`.

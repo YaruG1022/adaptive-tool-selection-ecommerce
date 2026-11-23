@@ -125,6 +125,8 @@ The Python environment implements the one-product clock, both information tools,
 
 The [DQN training](docs/dqn-v1-training.md) and [held-out evaluation](docs/held-out-v1-results.md) are complete. The selected DQN abstained from all tool calls and averaged $47.23 lower final net worth than the primary reference on 64 held-out markets. The report records the paired interval, sensitivity results, and decision traces.
 
+The Research Lab imports the [versioned browser bundle](contracts/browser-bundle-v1.md) from local Python archives. Imported summaries link to the recorded episodes, and Business Replay presents the original settlements while preserving the live warehouse and its history.
+
 The packaged prototype currently includes:
 
 - A standalone browser application with Warehouse, Research Lab, and Business Replay.
@@ -148,8 +150,8 @@ Only explore these if the main implementation and evaluation are complete and ti
 
 These are optional extensions, not parallel primary research objectives or promised deliverables. Visual shop growth, customer stories, and cosmetic unlocks are possible game-design additions; they are not implemented commitments.
 
-## 10. Next implementation steps
+## 10. Reproduce and demonstrate the first experiment
 
-Import recorded research episodes into the game interface as a follow-up using the Phase 5 episode records.
+Use the [experiment and export commands](research/README.md#export-research-records-for-the-browser) to prepare the archive for viewing in the Research Lab and Business Replay.
 
 For the course extended abstract, retain the five-section structure, a maximum of one page of main text, 11-point font, single-column layout, and single spacing. References may occupy a separate page. Describe planned work honestly and do not present simulated UI examples as completed research results.

@@ -1,8 +1,8 @@
 # Little Signal Shop: Phased Implementation Plan
 
-Version 0.5 · November 23, 2026
+Version 0.6 · November 23, 2026
 
-The [project plan](../FINAL_PROJECT_PLAN.md) defines the first experiment following feedback on the extended abstract. Phases 0–5 are complete. The remaining phase connects research records to the game.
+The [project plan](../FINAL_PROJECT_PLAN.md) defines the first experiment following feedback on the extended abstract. Phases 0–6 are complete.
 
 ## First experiment
 
@@ -20,9 +20,7 @@ The broader business system and graphical integration follow the first compariso
 | 3. Run the baseline comparison | Three baseline controllers and reproducible runs | Baselines reproduce from saved inputs and the comparison protocol is frozen | Complete |
 | 4. Implement and train DQN | A tool-selection controller using the same environment and business policy | Training smoke checks and multi-seed runs complete without changing comparison rules | Complete |
 | 5. Evaluate and report | Held-out comparisons, sensitivity analyses, traceable evidence | Metrics, uncertainty, failures, and limitations can be reproduced | Complete |
-| 6. Connect research records to the game | Research Lab results and immutable Business Replay imports | Imported records reconcile with the source runs and replay preserves the live store | Later |
-
-The independent browser prototype remains available while research record integration is pending.
+| 6. Connect research records to the game | Research Lab results and immutable Business Replay imports | Imported records reconcile with the source runs and replay preserves the live store | Complete |
 
 ## Phase 0 — Preserve the prototype
 
@@ -109,6 +107,8 @@ Gate: another run can regenerate the comparison tables/figures from saved inputs
 
 ## Phase 6 — Connect research records to the game
 
+Delivered in the [browser bundle and import workflow](../contracts/browser-bundle-v1.md). The Chrome regression imported the official 512 held-out episodes from a local file, displayed the archived contrast and checkpoint results, played recorded receipts, and verified that replay preserved the live shop state and history.
+
 After the first experiment is reported, add a local import and validation path for exported episode records. Extract browser modules as needed for presentation and playback.
 
 - Validate schema/environment versions and required fields. Identify source controller, market seed/input identifier, and the configuration that produced the result.
@@ -118,8 +118,6 @@ After the first experiment is reported, add a local import and validation path f
 
 Gate: imported receipts reconcile with their source runs; replay leaves live cash, stock, incoming orders, fees, history, and day unchanged. Browser regression checks pass. Documentation distinguishes implemented features, trained models, evaluation results, and remaining work.
 
-## Directory map and immediate next work
+## Directory map
 
 See [src](../src/README.md), [research](../research/README.md), [contracts](../contracts/README.md), [tests](../tests/README.md), [scripts](../scripts/README.md), and [artifacts](../artifacts/README.md) for ownership. Existing root web files remain active. `.gitkeep` files only retain reserved empty directories in Git.
-
-Phase 6 can use the archived episode records to connect research findings to the existing Research Lab and Business Replay.

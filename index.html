@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="styles.css">
   <script defer src="https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js"></script>
   <script defer src="i18n.js"></script>
+  <script defer src="src/replay/research-records.js"></script>
+  <script defer src="src/ui/research-panel.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
@@ -66,6 +68,14 @@
   </section>
   <section data-screen="lab" aria-labelledby="sw-lab-label" hidden>
    <div class="sw-section-heading"><div><span class="sw-overline">把经营疑问变成可以比较的实验</span><h3>什么时候，额外的信息值得花钱？</h3></div><span class="sw-badge">本地模拟 · 90 天 / 回合</span></div>
+   <section class="sw-research-import" aria-labelledby="sw-research-heading">
+    <div class="sw-research-upload"><div><h3 id="sw-research-heading">导入研究记录</h3><p class="sw-fine" id="sw-research-help">选择 Python 导出的 JSON。在此浏览器中查看结果与回放。</p></div>
+     <label class="sw-research-file">研究记录文件<input type="file" accept=".json,application/json" data-research-file aria-describedby="sw-research-help sw-research-status"></label>
+    </div>
+    <p id="sw-research-status" class="sw-fine sw-research-status" data-research-status role="status" aria-atomic="true"></p>
+    <div data-research-results hidden></div>
+   </section>
+   <h3 class="sw-demo-heading">浏览器示范实验</h3>
    <div class="sw-lab-layout">
     <aside class="sw-lab-settings"><h3>实验设置</h3><p class="sw-fine">固定经营规则、起始现金 $5,000 和相同库存；只改变信息获取方式。</p>
      <label>预测可靠度（Forecast Reliability）<select data-config="accuracy"><option value="0.9">高 · 预测误差较小</option><option value="0.75" selected>中 · 预测含有噪声</option><option value="0.4">低 · 预测波动较大</option></select></label>
@@ -74,7 +84,6 @@
      <label>市场种子（Market Seeds）<select data-config="seeds"><option value="3" selected>3 个 · 快速试玩</option><option value="6">6 个 · 多次比较</option><option value="12">12 个 · 更完整的分布</option></select></label>
      <div class="sw-setting-note">每天最多调查 2 次。三个方法共用相同的市场种子；预测可靠度控制误差范围。</div>
      <button class="sw-primary" data-lab-run><i data-lucide="play" aria-hidden="true"></i>重新运行对比</button><div class="sw-lab-actions"><button data-lab-pause disabled>暂停实验</button><button data-lab-stop disabled>结束实验</button></div>
-     <div class="sw-model-note"><b>学习模型还没有接入</b><p>深度 Q 网络（Deep Q-Network, DQN）尚未训练。这里展示三个固定规则方法的真实模拟结果。</p></div>
     </aside>
     <main class="sw-lab-results">
      <div class="sw-run-header"><div><h3 data-lab-status>正在准备示范实验</h3><p class="sw-fine" data-lab-detail></p></div><span class="sw-badge" data-lab-count></span></div>

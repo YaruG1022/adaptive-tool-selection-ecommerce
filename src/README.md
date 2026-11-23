@@ -1,6 +1,6 @@
 # Browser implementation
 
-Reserved for browser module extraction as needed during [research record integration](../docs/implementation-plan.md#phase-6--connect-research-records-to-the-game). These directories contain no extracted runtime code yet. The active application remains root `index.html`, `styles.css`, `i18n.js`, and `app.js`.
+The [research record integration](../docs/implementation-plan.md#phase-6--connect-research-records-to-the-game) uses `replay/research-records.js` to validate local bundles and `ui/research-panel.js` to render their summaries and charts. Root `index.html` loads both as classic scripts before `app.js` for direct local opening.
 
 | Directory | Intended responsibility |
 | --- | --- |

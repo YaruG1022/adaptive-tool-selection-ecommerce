@@ -6,35 +6,37 @@
 
 **当前成果：** Little Signal Shop（小信号商店）是可独立运行的浏览器原型（browser prototype），包含仓库动画、研究工作台和只读经营回放（read-only business replay）。首轮实验所用的无界面 Python 环境（headless Python environment）已实现并通过测试。
 
-**当前状态：** 第 1–5 阶段已完成。选定的深度 Q 网络（Deep Q-Network, DQN）在 64 个留出市场（held-out markets）上始终停止调查，平均期末净资产（mean final net worth）比不确定性阈值策略（uncertainty-threshold policy）低 47.23 美元。[留出评估报告（held-out evaluation report）](docs/held-out-v1-results.md)记录了置信区间（confidence interval）、敏感性分析（sensitivity analysis）和复现方法。
+**当前状态：** 第 1–6 阶段已完成。选定的深度 Q 网络（Deep Q-Network, DQN）在 64 个留出市场（held-out markets）上始终停止调查，平均期末净资产（mean final net worth）比不确定性阈值策略（uncertainty-threshold policy）低 47.23 美元。研究实验室可导入这批结果并查看原始记录。[留出评估报告（held-out evaluation report）](docs/held-out-v1-results.md)记录了置信区间（confidence interval）、敏感性分析（sensitivity analysis）和复现方法。
 
 ## 研究方向（Research direction）
 
 研究暂定题目为 *RL-Guided Adaptive Tool Selection for Long-Horizon Autonomous E-Commerce Agents*，属于 CPTS 580 的 Topic B: New Application。题目中的强化学习（reinforcement learning, RL）描述计划中的研究方法。
 
-首轮实验（initial experiment）在 Python 中运行，只模拟一种商品、固定售价和 90 天经营期。控制器（controller）在当日市场快报（same-day market report）、次日需求预测（next-day demand forecast）和停止调查之间选择。各方法共用固定补货规则（fixed replenishment rule）。评估使用匹配的市场条件、多个训练随机种子（training seeds）、留出市场（held-out markets）和配对置信区间（paired confidence intervals）。完整经营系统和浏览器集成（browser integration）安排在首轮比较之后。
+首轮实验（initial experiment）在 Python 中运行，只模拟一种商品、固定售价和 90 天经营期。控制器（controller）在当日市场快报（same-day market report）、次日需求预测（next-day demand forecast）和停止调查之间选择。各方法共用固定补货规则（fixed replenishment rule）。评估使用匹配的市场条件、多个训练随机种子（training seeds）、留出市场（held-out markets）和配对置信区间（paired confidence intervals）。
 
 [项目总计划](FINAL_PROJECT_PLAN.md)给出决策时钟（decision clock）和结算算例（worked example）。[实施计划](docs/implementation-plan.md)列出各阶段及验收标准（acceptance criteria）。两份计划目前以英文维护。
 
 ## 运行原型（Run the prototype）
 
-使用当前版本的 Edge、Chrome 或 Firefox 浏览器（browser）打开根目录中的 `index.html`。无需安装软件包（package）、执行构建（build）、注册账户或提供应用程序接口密钥（Application Programming Interface key, API key）。请将 `index.html`、`styles.css`、`i18n.js` 和 `app.js` 保持在同一目录。
+保留仓库的目录结构，使用当前版本的 Edge、Chrome 或 Firefox 浏览器（browser）打开根目录中的 `index.html`。应用可直接从本地运行，无需执行构建（build）。
 
 界面默认使用英文。顶部的 `中文` / `English` 按钮可切换语言，并保留当前页面、商店状态、实验设置、所选记录及播放状态。刷新后会重新开始一个英文会话（session）。
 
 Lucide 1.17.0 图标（icons）通过固定版本的 unpkg 地址加载。如果该资源不可用，图标可能缺失，经营逻辑和操作控件仍可运行。
+
+若要查看归档结果，在**研究实验室（Research Lab） → 导入研究记录（Import research records）**选择 [Python 导出的 JSON 文件](research/README.md#export-research-records-for-the-browser)。
 
 ## 已实现功能（Implemented features）
 
 | 页面 | 当前功能 |
 | --- | --- |
 | 仓库（Warehouse） | 付费信息工具、每天最多两次调用、采购、库存、延迟到货、销售、结算，以及拣货、打包和发货动画 |
-| 研究实验室（Research Lab） | 在匹配的市场随机种子（market random seeds）下比较不调查、用满工具预算和固定规则；可设置预测可靠度、波动、工具费用和种子数量 |
-| 经营回放（Business Replay） | 查看记录中的决策、信息、现金变动、缺货和事后需求；播放原始收据（receipt），不改变当前商店 |
+| 研究实验室（Research Lab） | 导入本地研究结果，查看留出评估轨迹（held-out evaluation trajectories）和检查点验证曲线（checkpoint validation curves）。浏览器示范实验仍可独立运行 |
+| 经营回放（Business Replay） | 查看当前商店、示范实验或导入研究的决策、付费信息、结算与事后需求，播放原始记录，同时保留当前商店状态 |
 
 播放支持暂停、变速、跳过和减少动态效果（reduced motion）。实验暂停独立于仓库播放。手动商店从第 28 天开始，研究演示回合（episodes）覆盖第 1 至第 90 天。
 
-所有状态和历史记录都保存在浏览器内存（browser memory）中，刷新即重置。目前没有后端（backend）、数据库（database）、已连接的大语言模型（large language model, LLM）或已保存的训练模型（trained model）。经营轨迹（business trajectories）与学习曲线（learning curves）含义不同。退货、促销及完整的会计与估值模型（accounting and valuation model）仍待实现；当前期末库存折价属于演示假设。
+当前商店、示范实验和导入的归档记录都保存在浏览器内存（browser memory）中，刷新即重置。浏览器使用归档数据展示研究结果和回放。退货、促销与更完整的会计模型（accounting model）仍属后续工作。浏览器示范采用独立的期末库存折价（ending inventory discount）设定。
 
 ## 实施阶段（Implementation phases）
 
@@ -45,7 +47,7 @@ Lucide 1.17.0 图标（icons）通过固定版本的 unpkg 地址加载。如果
 5. 在留出市场（held-out markets）上评估，报告不确定性、失败情况与限制。
 6. 首轮报告完成后，将研究回合记录（episode records）导入现有研究实验室和经营回放页面。
 
-原型和第 1–5 阶段已完成。详见[基线结果](docs/baseline-v1-results.md)、[训练与选型](docs/dqn-v1-training.md)和 [Python 运行与测试说明](research/README.md)。
+详见[基线结果](docs/baseline-v1-results.md)、[训练与选型](docs/dqn-v1-training.md)和 [Python 运行与测试说明](research/README.md)。
 
 ## 仓库结构（Repository structure）
 
@@ -54,10 +56,10 @@ index.html / styles.css / i18n.js / app.js   当前浏览器原型
 FINAL_PROJECT_PLAN.md                       约定的研究方向
 docs/implementation-plan.md                  实施阶段和验收标准
 contracts/                                  研究环境与回合记录规范
-src/                                        预留浏览器模块拆分
+src/                                        研究记录校验与浏览器展示
 research/configs/                           冻结版环境设置与随机种子划分
-research/src/little_signal_shop/             Python 环境、补货规则与基线比较程序
-tests/                                      Python 验证与确定性测试样例
+research/src/little_signal_shop/             Python 研究环境、实验与浏览器导出
+tests/                                      Python、JavaScript 与浏览器验证
 scripts/                                    预留项目命令
 artifacts/                                  忽略生成产物，保留目录说明
 CODEX_SETUP_INSTRUCTIONS.md                  原始本地与 GitHub 设置说明

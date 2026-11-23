@@ -4,6 +4,8 @@ The [environment v1 specification](environment-v1.md) defines the Python experim
 
 The [evaluation protocol v1](evaluation-v1.md) fixes the baseline rules, seed splits, model selection, metrics, and held-out analysis.
 
+The [browser bundle v1](browser-bundle-v1.md) defines the versioned local file exchanged by the Python exporter and Research Lab.
+
 The specification covers the following behavior.
 
 - State and episode configuration, including initial conditions and environment version.
