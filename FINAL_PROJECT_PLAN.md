@@ -123,6 +123,8 @@ Replay the recorded receipt rather than re-running the market. Preserve the curr
 
 The Python environment implements the one-product clock, both information tools, the fixed replenishment rule, daily settlement, and versioned episode records. Tests cover full 90-day episodes on identical saved inputs. The [baseline comparison](docs/baseline-v1-results.md) ran three controllers on 24 matched validation markets and selected `uncertainty_threshold` as the primary reference under the [frozen evaluation protocol](contracts/evaluation-v1.md).
 
+The [DQN training](docs/dqn-v1-training.md) and [held-out evaluation](docs/held-out-v1-results.md) are complete. The selected DQN abstained from all tool calls and averaged $47.23 lower final net worth than the primary reference on 64 held-out markets. The report records the paired interval, sensitivity results, and decision traces.
+
 The packaged prototype currently includes:
 
 - A standalone browser application with Warehouse, Research Lab, and Business Replay.
@@ -148,8 +150,6 @@ These are optional extensions, not parallel primary research objectives or promi
 
 ## 10. Next implementation steps
 
-1. Train the tool-selection DQN with multiple seeds under the frozen evaluation protocol.
-2. Evaluate on held-out markets and report paired differences, confidence intervals, and limitations.
-3. Import recorded research episodes into the game interface as a follow-up.
+Import recorded research episodes into the game interface as a follow-up using the Phase 5 episode records.
 
 For the course extended abstract, retain the five-section structure, a maximum of one page of main text, 11-point font, single-column layout, and single spacing. References may occupy a separate page. Describe planned work honestly and do not present simulated UI examples as completed research results.

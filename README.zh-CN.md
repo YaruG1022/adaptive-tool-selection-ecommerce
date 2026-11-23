@@ -6,7 +6,7 @@
 
 **当前成果：** Little Signal Shop（小信号商店）是可独立运行的浏览器原型（browser prototype），包含仓库动画、研究工作台和只读经营回放（read-only business replay）。首轮实验所用的无界面 Python 环境（headless Python environment）已实现并通过测试。
 
-**当前状态：** 第 1–3 阶段已完成。Python 基线比较（baseline comparison）使用 24 个匹配的验证市场（matched validation markets），并将不确定性阈值策略（uncertainty-threshold policy）固定为主要比较对象。深度 Q 网络（Deep Q-Network, DQN）训练和留出评估（held-out evaluation）安排在后续阶段。浏览器中的三种固定策略结果来自演示模拟（demonstration simulation）。
+**当前状态：** 第 1–5 阶段已完成。选定的深度 Q 网络（Deep Q-Network, DQN）在 64 个留出市场（held-out markets）上始终停止调查，平均期末净资产（mean final net worth）比不确定性阈值策略（uncertainty-threshold policy）低 47.23 美元。[留出评估报告（held-out evaluation report）](docs/held-out-v1-results.md)记录了置信区间（confidence interval）、敏感性分析（sensitivity analysis）和复现方法。
 
 ## 研究方向（Research direction）
 
@@ -45,7 +45,7 @@ Lucide 1.17.0 图标（icons）通过固定版本的 unpkg 地址加载。如果
 5. 在留出市场（held-out markets）上评估，报告不确定性、失败情况与限制。
 6. 首轮报告完成后，将研究回合记录（episode records）导入现有研究实验室和经营回放页面。
 
-原型和第 1–3 阶段已完成。详见[基线结果](docs/baseline-v1-results.md)、[冻结版评估方案（frozen evaluation protocol）](contracts/evaluation-v1.md)和 [Python 运行与测试说明](research/README.md)。
+原型和第 1–5 阶段已完成。详见[基线结果](docs/baseline-v1-results.md)、[训练与选型](docs/dqn-v1-training.md)和 [Python 运行与测试说明](research/README.md)。
 
 ## 仓库结构（Repository structure）
 
@@ -63,7 +63,7 @@ artifacts/                                  忽略生成产物，保留目录说
 CODEX_SETUP_INSTRUCTIONS.md                  原始本地与 GitHub 设置说明
 ```
 
-研究环境与测试只使用 Python 标准库（standard library）。GitHub 仓库改名后，本地目录可继续使用 `little-signal-shop`。
+研究环境和固定基线策略使用 Python 标准库（standard library）。深度 Q 网络（Deep Q-Network, DQN）的训练、评估和相关测试使用 [PyTorch 依赖（dependency）](research/requirements-dqn.txt)。
 
 ## 验证与限制（Verification and limitations）
 

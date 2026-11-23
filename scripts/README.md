@@ -1,6 +1,6 @@
 # Project commands
 
-Run the baseline comparison and saved-input replay through the [Python module command](../research/README.md#run-the-baseline-comparison). The `scripts/` directory is reserved for future standalone entry points.
+Run the baseline comparison through its [Python module command](../research/README.md#run-the-baseline-comparison). The [training and evaluation commands](../research/README.md#train-and-evaluate-the-dqn) cover DQN selection, held-out evaluation, and replay.
 
 Add commands when their implementation exists, together with documented inputs, configuration paths, output location, and a small reproducible example. Keep simulation and learning logic in the implementation modules. Commands should write generated output under `artifacts/` and record code revision, environment/schema versions, configuration, and seeds.
 

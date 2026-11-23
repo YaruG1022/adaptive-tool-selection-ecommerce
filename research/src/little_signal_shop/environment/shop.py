@@ -45,8 +45,9 @@ def _record_observation(observation: Observation | None) -> dict | None:
 class ShopEnvironment:
     """A tool-selection environment that applies the same replenishment rule at every stop."""
 
-    def __init__(self, config: EnvironmentConfig) -> None:
+    def __init__(self, config: EnvironmentConfig, *, record_transitions: bool = True) -> None:
         self._config = config
+        self._record_transitions = record_transitions
         self._tools = {
             Action.MARKET_REPORT: _Tool(
                 "market_report", config.market_report_fee_cents, config.market_report_minutes
@@ -111,21 +112,24 @@ class ShopEnvironment:
 
         reward_cents = worth_after - worth_before
         self._observation = after
-        self._transitions.append({
-            "action": action.value,
-            "before": _record_observation(before),
-            "after": _record_observation(after),
-            "reward_cents": reward_cents,
-            "net_worth_cents": worth_after,
-            "fee_cents": fee_cents,
-            "settlements": [asdict(settlement) for settlement in settlements],
-        })
+        if self._record_transitions:
+            self._transitions.append({
+                "action": action.value,
+                "before": _record_observation(before),
+                "after": _record_observation(after),
+                "reward_cents": reward_cents,
+                "net_worth_cents": worth_after,
+                "fee_cents": fee_cents,
+                "settlements": [asdict(settlement) for settlement in settlements],
+            })
         return StepResult(after, reward_cents, terminated=after is None)
 
     def episode_record(
         self, code_revision: str, controller_id: str, model_id: str | None = None
     ) -> dict:
         """Export a detached, JSON-ready record once all decisions have ended."""
+        if not self._record_transitions:
+            raise RuntimeError("episode recording is disabled for this environment")
         if self._inputs is None or self._observation is not None:
             raise RuntimeError("episode records are available after final settlement")
         ids = {"code_revision": code_revision, "controller_id": controller_id}

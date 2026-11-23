@@ -1,8 +1,8 @@
 # Little Signal Shop: Phased Implementation Plan
 
-Version 0.4 · November 23, 2026
+Version 0.5 · November 23, 2026
 
-The [project plan](../FINAL_PROJECT_PLAN.md) defines the first experiment following feedback on the extended abstract. Phases 0–3 are complete. Phases 4–5 cover DQN training and the held-out report, and Phase 6 follows the report.
+The [project plan](../FINAL_PROJECT_PLAN.md) defines the first experiment following feedback on the extended abstract. Phases 0–5 are complete. The remaining phase connects research records to the game.
 
 ## First experiment
 
@@ -18,11 +18,11 @@ The broader business system and graphical integration follow the first compariso
 | 1. Specify the environment | Versioned rules, input model, and record format | Decisions, clock, accounting, randomness, and expected examples are documented | Complete |
 | 2. Build and validate the Python environment | Headless environment, fixed business policy, deterministic fixtures | Example ledgers reconcile and transition, timing, and observation checks pass | Complete |
 | 3. Run the baseline comparison | Three baseline controllers and reproducible runs | Baselines reproduce from saved inputs and the comparison protocol is frozen | Complete |
-| 4. Implement and train DQN | A tool-selection controller using the same environment and business policy | Training smoke checks and multi-seed runs complete without changing comparison rules | Proposed |
-| 5. Evaluate and report | Held-out comparisons, sensitivity analyses, traceable evidence | Metrics, uncertainty, failures, and limitations can be reproduced | Proposed |
+| 4. Implement and train DQN | A tool-selection controller using the same environment and business policy | Training smoke checks and multi-seed runs complete without changing comparison rules | Complete |
+| 5. Evaluate and report | Held-out comparisons, sensitivity analyses, traceable evidence | Metrics, uncertainty, failures, and limitations can be reproduced | Complete |
 | 6. Connect research records to the game | Research Lab results and immutable Business Replay imports | Imported records reconcile with the source runs and replay preserves the live store | Later |
 
-Schedule the remaining work once the course deadline is confirmed. Select the training framework in Phase 4.
+The independent browser prototype remains available while research record integration is pending.
 
 ## Phase 0 — Preserve the prototype
 
@@ -84,6 +84,8 @@ Phase 3 is complete when baseline runs reproduce from saved configurations and i
 
 ## Phase 4 — Implement and train the tool-selection DQN
 
+Delivered in the [training and selection report](dqn-v1-training.md). Both settings and all five learning seeds completed training. Validation selected `mlp32` at episode 100 under the registered tie rule.
+
 Use a conventional Deep Q-Network implementation for the two tool actions and `STOP`. The fixed replenishment rule continues to place orders.
 
 - Encode only permitted observations and legal actions. Apply the same action constraints during exploration, greedy action choice, and target calculation.
@@ -94,6 +96,8 @@ Use a conventional Deep Q-Network implementation for the two tool actions and `S
 Gate: the training procedure runs reproducibly within the available compute budget, saved controllers reload, and validation behavior is inspectable. No improvement over fixed rules is assumed or required for an honest result. DQN remains labeled unimplemented/untrained until the corresponding milestones actually finish.
 
 ## Phase 5 — Evaluate and report
+
+Delivered in the [held-out evaluation report](held-out-v1-results.md). The main comparison includes 512 episodes across 64 markets. The report includes the paired interval, tool-use diagnostics, six sensitivity scenarios, and the reproduction procedure.
 
 Evaluate frozen controllers on held-out markets using the same environment version and matched exogenous conditions. Separate variation across learning seeds from variation across market episodes.
 
@@ -118,4 +122,4 @@ Gate: imported receipts reconcile with their source runs; replay leaves live cas
 
 See [src](../src/README.md), [research](../research/README.md), [contracts](../contracts/README.md), [tests](../tests/README.md), [scripts](../scripts/README.md), and [artifacts](../artifacts/README.md) for ownership. Existing root web files remain active. `.gitkeep` files only retain reserved empty directories in Git.
 
-Phase 4 implements and trains the DQN using the frozen seed splits, selection budget, and validation procedure. Preserve the selected checkpoints for the held-out comparison.
+Phase 6 can use the archived episode records to connect research findings to the existing Research Lab and Business Replay.

@@ -41,9 +41,18 @@ class MarketInputs:
         return sha256(encoded.encode("ascii")).hexdigest()
 
 
-def generate_market(config: EnvironmentConfig, seed: int) -> MarketInputs:
-    """Generate coupled daily demand and noisy observations for one market seed."""
+def generate_market(
+    config: EnvironmentConfig,
+    seed: int,
+    *,
+    regime_switch_probability: float = 0.20,
+    forecast_noise: int = 2,
+) -> MarketInputs:
+    """Generate a market path with the specified volatility and forecast noise."""
     require_nonnegative_int("seed", seed)
+    require_nonnegative_int("forecast_noise", forecast_noise)
+    if type(regime_switch_probability) not in (int, float) or not 0 <= regime_switch_probability <= 1:
+        raise ValueError("regime_switch_probability must be between zero and one")
     channels = {
         name: Random(f"lss-market-v1:{seed}:{name}")
         for name in ("regime", "demand", "public_today", "public_tomorrow", "market_report", "forecast")
@@ -52,7 +61,7 @@ def generate_market(config: EnvironmentConfig, seed: int) -> MarketInputs:
     level = 5 if regime.random() < 0.5 else 11
     demand = []
     for day in range(config.days):
-        if day > 0 and regime.random() < 0.20:
+        if day > 0 and regime.random() < regime_switch_probability:
             level = 11 if level == 5 else 5
         demand.append(max(0, level + channels["demand"].randint(-3, 3)))
 
@@ -65,7 +74,7 @@ def generate_market(config: EnvironmentConfig, seed: int) -> MarketInputs:
             public_today=estimate(today, "public_today", 4),
             public_tomorrow=estimate(tomorrow, "public_tomorrow", 6),
             market_report=estimate(today, "market_report", 1),
-            forecast=estimate(tomorrow, "forecast", 2),
+            forecast=estimate(tomorrow, "forecast", forecast_noise),
         )
         for today, tomorrow in zip(demand, demand[1:])
     ]

@@ -1,0 +1,20 @@
+{
+  "version": "1",
+  "episodes": 500,
+  "checkpoint_episodes": [100, 250, 500],
+  "gamma": 1.0,
+  "batch_size": 64,
+  "replay_capacity": 20000,
+  "learning_starts": 256,
+  "train_every_steps": 12,
+  "target_update_steps": 250,
+  "epsilon_start": 1.0,
+  "epsilon_end": 0.05,
+  "epsilon_decay_episodes": 350,
+  "reward_scale_cents": 1000,
+  "gradient_clip_norm": 10.0,
+  "candidates": [
+    {"id": "mlp32", "hidden_sizes": [32, 32], "learning_rate": 0.0003},
+    {"id": "mlp64", "hidden_sizes": [64, 64], "learning_rate": 0.001}
+  ]
+}

@@ -42,7 +42,7 @@ The `input_id` is the lowercase SHA-256 hex digest of the compact ASCII JSON arr
 
 | API | Behavior |
 | --- | --- |
-| `ShopEnvironment(config)` | Constructs an environment for the given configuration. |
+| `ShopEnvironment(config, record_transitions=True)` | Constructs an environment for the given configuration. Training may disable recording without changing observations, rewards, or settlement. |
 | `reset(inputs) -> Observation` | Starts a fresh episode at the opening of day 1 and clears prior transitions. Opening stock is on hand and opening cash is available. |
 | `observe() -> Observation \| None` | Returns the current decision observation, or `None` after the episode ends. |
 | `step(action: Action) -> StepResult` | Executes a legal action and returns `observation`, `reward_cents`, and `terminated`. A terminal result has `observation=None`. |
@@ -121,4 +121,4 @@ A transition includes `action` as its enum string value, `before` and `after` as
 | `closing_stock`, `in_transit_units`, `cash_cents` | End-of-day on-hand stock, prepaid units still due, and cash balance. |
 | `inventory_value_cents`, `terminal_write_down_cents`, `net_worth_cents` | Closing inventory valuation including in-transit stock, the terminal reduction in inventory value (zero at other settlements), and closing net worth. |
 
-Requesting a record before final settlement raises `RuntimeError`. Invalid supplied identifiers raise `ValueError` after the episode has ended.
+Requesting a record before final settlement or from an environment with recording disabled raises `RuntimeError`. Invalid supplied identifiers raise `ValueError` after the episode has ended.

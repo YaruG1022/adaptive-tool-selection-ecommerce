@@ -1,0 +1,2 @@
+# For CPU-only wheels on supported platforms, use https://download.pytorch.org/whl/cpu as the package index.
+torch==2.8.0

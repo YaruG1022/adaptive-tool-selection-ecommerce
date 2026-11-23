@@ -13,6 +13,8 @@ python -B -m unittest discover -s tests -v
 
 Use the full path to `python.exe` if the interpreter is outside `PATH`. In a POSIX shell, run `PYTHONPATH=research/src python3 -B -m unittest discover -s tests -v`.
 
+Install the training dependency below to include the DQN and held-out evaluation tests in discovery.
+
 ## Use the environment
 
 With `research/src` on the Python import path, this example exercises a complete episode on one market seed.
@@ -50,6 +52,25 @@ python -B -m little_signal_shop.experiments.baseline_comparison --config artifac
 
 See the [baseline development results](../docs/baseline-v1-results.md) and [evaluation protocol](../contracts/evaluation-v1.md) for metrics, output files, seed splits, and selection rules.
 
+## Train and evaluate the DQN
+
+Use a Python environment with the PyTorch dependency in [`requirements-dqn.txt`](requirements-dqn.txt). The study used CPU-only PyTorch 2.8.0 on Python 3.12.4. From the repository root, keep `research/src` on the import path and provide the saved Phase 3 validation inputs and summary to training.
+
+```powershell
+$env:PYTHONPATH = (Resolve-Path 'research/src').Path
+python -B -m little_signal_shop.experiments.train_dqn --validation-inputs artifacts/phase3-baselines/market_inputs.json --baseline-summary artifacts/phase3-baselines/summary.json --output artifacts/phase4-dqn --workers 4
+```
+
+The training program evaluates checkpoints on the complete validation grid and records the joint selection across all five learning seeds. Keep the resulting training directory, including `selection.json` and its checkpoint files. The evaluation command verifies the selected files before running the held-out markets. Use a new directory for each output.
+
+```powershell
+python -B -m little_signal_shop.experiments.evaluate_dqn --training artifacts/phase4-dqn --output artifacts/phase5-held-out --sensitivity
+```
+
+Use `--inputs artifacts/phase5-held-out/market_inputs.json` to replay the saved main evaluation inputs in a new directory. The six sensitivity scenarios run with the same frozen checkpoints and baseline rules.
+
+See the [training and selection report](../docs/dqn-v1-training.md) and [held-out evaluation report](../docs/held-out-v1-results.md).
+
 ## Package layout
 
 ```text
@@ -58,10 +79,10 @@ research/
   src/little_signal_shop/
     environment/                    World transitions, accounting, information tools, observations, rewards
     policies/                       The fixed operational business policy
-    controllers/                    Three fixed baseline controllers
-    experiments/                    Baseline comparison and protocol loader
+    controllers/                    Three fixed baselines and the DQN controller
+    experiments/                    Baseline comparison, DQN training, and held-out evaluation
 ```
 
 The environment owns hidden market state. The controller receives only decision-time observations, and every controller uses the same replenishment rule.
 
-The next phase adds the learned controller. Store generated runs, checkpoints, and exports under root `artifacts/`. Keep training, validation, and held-out evaluation seed sets separate.
+Keep generated runs, checkpoints, and exports under root `artifacts/`. The Phase 5 episode archives provide source records for the next phase's browser integration.

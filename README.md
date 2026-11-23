@@ -6,7 +6,7 @@ A research project studying when an autonomous e-commerce agent should acquire i
 
 **Current deliverables:** Little Signal Shop, a standalone browser prototype with an animated warehouse, research workbench, and read-only business replay, and a tested headless Python environment for the first experiment.
 
-**Status:** Phases 1–3 are complete. The Python baseline comparison ran on 24 matched validation markets and froze `uncertainty_threshold` as the primary reference. Deep Q-Network (DQN) training and held-out evaluation follow. The browser comparisons illustrate three fixed policies in the demonstration simulation.
+**Status:** Phases 1–5 are complete. The selected Deep Q-Network (DQN) made zero tool calls and averaged $47.23 lower final net worth than `uncertainty_threshold` on 64 held-out markets. See the [held-out report](docs/held-out-v1-results.md) for the uncertainty interval, sensitivity runs, and reproduction commands.
 
 ## Research direction
 
@@ -45,7 +45,7 @@ All state and histories live in browser memory and reset on refresh. There is no
 5. Evaluate on held-out markets and report uncertainty, failures, and limitations.
 6. After the first report, import research episode records into the existing Research Lab and Business Replay.
 
-The prototype and Phases 1–3 are complete. See the [baseline results](docs/baseline-v1-results.md), [frozen evaluation protocol](contracts/evaluation-v1.md), and [Python usage and test guide](research/README.md).
+The prototype and Phases 1–5 are complete. See the [baseline results](docs/baseline-v1-results.md), [training and selection](docs/dqn-v1-training.md), and [Python run and test guide](research/README.md).
 
 ## Repository structure
 
@@ -63,7 +63,7 @@ artifacts/                                  Ignored generated output; README rem
 CODEX_SETUP_INSTRUCTIONS.md                  Historical local/GitHub setup instructions
 ```
 
-The research environment and its tests use only the Python standard library. The original local checkout may remain named `little-signal-shop` after the GitHub repository rename.
+The environment and fixed baselines use the Python standard library. DQN training, evaluation, and their tests use the dependency in [requirements-dqn.txt](research/requirements-dqn.txt).
 
 ## Verification and limitations
 
