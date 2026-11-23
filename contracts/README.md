@@ -1,8 +1,10 @@
 # Shared contracts
 
-This directory is reserved for reviewed, versioned specifications and machine-readable schemas shared by the JavaScript reference, Python environment, and replay importer. No validated contract or schema is supplied by this scaffold.
+The [environment v1 specification](environment-v1.md) defines the Python experiment and its episode record. The [worked fixture](../tests/fixtures/worked-example-v1.json) gives machine-readable inputs and expected results.
 
-Phase 1 should define:
+The [evaluation protocol v1](evaluation-v1.md) fixes the baseline rules, seed splits, model selection, metrics, and held-out analysis.
+
+The specification covers the following behavior.
 
 - State and episode configuration, including initial conditions and environment version.
 - Controller observations, legal actions, tool budget/time, stopping, and termination.
@@ -10,4 +12,4 @@ Phase 1 should define:
 - Reproducible exogenous market/tool inputs independent of action order.
 - Immutable episode/receipt formats, run identity, configuration snapshots, and analysis-only fields.
 
-Describe prototype compatibility separately from deliberate research changes. Store representative serialized examples in `tests/fixtures/`, and test those examples against the eventual schemas. English/Chinese presentation strings are not identifiers and do not belong in controller observations.
+Keep representative serialized examples in `tests/fixtures/`. Use stable record identifiers independently of English and Chinese presentation strings.

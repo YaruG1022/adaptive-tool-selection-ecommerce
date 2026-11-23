@@ -1,33 +1,28 @@
-# Little Signal Shop: Initial Phased Implementation Plan
+# Little Signal Shop: Phased Implementation Plan
 
-Version: 0.1 proposal · October 31, 2026
+Version 0.4 · November 23, 2026
 
-Source of scope: [FINAL_PROJECT_PLAN.md](../FINAL_PROJECT_PLAN.md). That document remains the agreed project direction; this document proposes the implementation order, deliverables, and completion gates. Estimates and algorithm settings are not research results. Only Phase 0 is complete; the remaining phases are proposed.
+The [project plan](../FINAL_PROJECT_PLAN.md) defines the first experiment following feedback on the extended abstract. Phases 0–3 are complete. Phases 4–5 cover DQN training and the held-out report, and Phase 6 follows the report.
 
-## Review and recommended scope
+## First experiment
 
-The agreed plan has a clear central question: whether a controller can improve long-term business outcomes by learning when and which information tools to use. Keep that controller separate from one fixed operational business policy. The current browser application is a useful reference and demonstration, but it is not yet a research environment or a trained agent.
+Build a headless Python environment for one product, a fixed selling price, and one fixed replenishment policy. The controller chooses the same-day market report, the next-day demand forecast, or stopping. Use 90-day episodes, at most one call per tool per decision day, and a deadline for completing those calls. The first comparison ends with reproducible results and a report.
 
-The first research iteration should use three products, the five specified tools, an explicit two-call daily budget, delayed replenishment, a fixed procurement/pricing policy, and 90-day episodes. Product launches, returns, promotions, a connected language model, strategy selection, and alternative reward studies can follow the first controlled comparison. Their omission from the first iteration must remain visible in the limitations. Decide which accounting features are essential in Phase 1; do not silently describe the prototype's inventory discount as the full planned valuation model.
-
-Two details in the existing implementation need particular attention:
-
-- Supplier analysis currently changes delivery lead time from two days to one. Preserve that behavior when reproducing the prototype, then decide whether research tools reveal supplier information or also change operations. A change requires a new environment version and fresh results.
-- The seeded noise uses JavaScript `Math.sin`, and monetary/demand rounding uses JavaScript rules. Equal numeric seeds do not establish JavaScript/Python equivalence. Share serialized exogenous inputs or specify portable randomness and rounding before claiming parity.
+The broader business system and graphical integration follow the first comparison. The browser prototype has a separate simulation and its own regression cases. Validate the Python environment against the first experiment's written rules, ledger examples, and saved market inputs.
 
 ## Phase overview
 
 | Phase | Deliverable | Completion gate | Status |
 | --- | --- | --- | --- |
 | 0. Preserve the prototype | Private repository, working browser entry point, directory scaffold | Original files and verified behavior retained | Complete |
-| 1. Specify the environment | Versioned contracts and a small research scope | Accounting, observations, actions, randomness, and termination decisions are explicit | Proposed |
-| 2. Extract the JavaScript reference | DOM-free simulation and browser presentation modules | Browser and headless receipts match; original interface still works | Proposed |
-| 3. Build Python and the baseline harness | Compatible environment, three baseline controllers, reproducible runs | Episode parity and invariant checks pass; comparison protocol is frozen | Proposed |
+| 1. Specify the environment | Versioned rules, input model, and record format | Decisions, clock, accounting, randomness, and expected examples are documented | Complete |
+| 2. Build and validate the Python environment | Headless environment, fixed business policy, deterministic fixtures | Example ledgers reconcile and transition, timing, and observation checks pass | Complete |
+| 3. Run the baseline comparison | Three baseline controllers and reproducible runs | Baselines reproduce from saved inputs and the comparison protocol is frozen | Complete |
 | 4. Implement and train DQN | A tool-selection controller using the same environment and business policy | Training smoke checks and multi-seed runs complete without changing comparison rules | Proposed |
 | 5. Evaluate and report | Held-out comparisons, sensitivity analyses, traceable evidence | Metrics, uncertainty, failures, and limitations can be reproduced | Proposed |
-| 6. Connect research records to the game | Research Lab results and immutable Business Replay imports | Records match their runs; playback never changes the live store | Proposed |
+| 6. Connect research records to the game | Research Lab results and immutable Business Replay imports | Imported records reconcile with the source runs and replay preserves the live store | Later |
 
-Work proceeds through these gates in order. Calendar estimates should be added after Phase 1 establishes the remaining environment scope and the course deadline. No training framework or dependency versions are selected by this scaffold.
+Schedule the remaining work once the course deadline is confirmed. Select the training framework in Phase 4.
 
 ## Phase 0 — Preserve the prototype
 
@@ -53,51 +48,46 @@ These are rounded prototype regression anchors, not formal research findings. La
 
 ## Phase 1 — Specify the environment
 
-Write reviewed specifications in `contracts/` before implementing the Python environment.
+Delivered in [environment v1](../contracts/environment-v1.md) and the [worked fixture](../tests/fixtures/worked-example-v1.json).
 
-1. Define state, product and order identifiers, inventory in transit, information observations and their age, configuration, and the fixed operational business policy.
-2. Define the decision clock: a controller selects one of five tools or stops. Specify when the two-call limit settles the day, whether repeated tools are allowed, unaffordable/invalid action handling, time budgets, and which actions remain legal. Stopping must remain available whenever settlement is possible.
-3. Define what the controller can observe. Keep decision-time observations separate from internal market truth, future outcomes, and post-hoc replay data. Specify units, normalization, missing-information indicators, and history length.
-4. Define cash, inventory valuation, prepaid stock, liabilities if included, fees, operating/holding charges, delivery timing, terminal valuation, and rounding. Choose either an explicitly limited prototype-compatible model or a specified research accounting model. Version any difference.
-5. Define reward timing. Net-worth changes across tool decisions and settlement should add to the episode's total net-worth change before discounting. Charge each fee once and apply terminal valuation once. Document the discount/time convention so additional tool actions do not accidentally change the objective.
-6. Define a versioned episode record: environment and schema versions, code revision, configuration snapshot, seeds or exogenous inputs, controller/model identity, observations, actions, costs/time, decisions, inventory/cash transitions, receipts, and post-hoc truth in a separate field.
-7. Define initial conditions, 90-day completion, and any insolvency rule. Report bankruptcy rate only after a corresponding termination rule exists.
-8. Define independent market/tool randomness keyed by episode, day, product, and tool as appropriate. Extra tool calls must not shift subsequent market draws. Decide the supplier-analysis semantics explicitly.
+Record the [tool and clock rules](../FINAL_PROJECT_PLAN.md#decision-clock-and-resumption) and [worked example](../FINAL_PROJECT_PLAN.md#worked-example) in versioned specifications and fixtures. Resolve the experiment settings before implementing the environment.
 
-Gate: every item has a written decision and a concrete example. Training inputs cannot access analysis-only fields. Research scope omissions and differences from the prototype are listed. Proposed contracts are not called validated until their checks pass.
+1. Specify opening cash and stock, selling price, unit purchase cost, net realizable value at the horizon, demand generation, and units and rounding. Use integer currency units such as cents for accounting.
+2. Specify the public demand estimates and both tools' signal models, including noise, calibration, and what the controller observes on completion. Generate independent market and tool-noise inputs from saved seeds or serialized streams so taking more actions leaves future market draws unchanged. Keep realized demand and future outcomes out of decision-time observations.
+3. Record the legal actions, the 09:00–10:30 investigation window, and the order of fee, clock advance, result delivery, and `STOP`. Specify how the environment rejects illegal actions without changing state. Include exact-deadline completion, insufficient cash, repeated calls, and the transition to the next decision day.
+4. Specify the fixed order-up-to rule, prepaid inventory ledger, terminal valuation, and transition rewards. Use undiscounted finite-horizon return for the first experiment and verify that the sum of transition rewards equals the change in net worth.
+5. Define the versioned episode record with the code revision, configuration, seed or input identifiers, controller and model identity, timestamps, observations, actions, fees, purchases, cash and inventory changes, and sales. Keep post-settlement demand in a separate field for analysis.
 
-## Phase 2 — Extract the JavaScript reference
+Phase 1 is complete when the rules yield a unique expected outcome for the worked example, boundary cases, and a small full episode. Include one example per tool in which its signal changes the order quantity while the state, fee, time, and market are held fixed across signal values.
 
-Use the current `observeTool`, `simulateDay`, `newTrial`, and `applyMethod` functions as starting points. Move behavior in small changes, keeping one authoritative implementation for each behavior rather than leaving a second copy in `app.js`.
+## Phase 2 — Build and validate the Python environment
 
-- `src/simulation/`: transitions, accounting, market inputs, and episode initialization without DOM or animation dependencies.
-- `src/tools/`: information observations, eligibility, fees, and decision delays.
-- `src/policies/`: the fixed business policy and prototype baseline decision rules.
-- `src/replay/`: record selection and playback preparation from immutable recorded receipts.
-- `src/ui/`: Warehouse, Research Lab, and Business Replay presentation and playback coordination.
+Delivered in [the Python research package and its tests](../research/README.md). The 90-day checks replay saved market rows and reconcile daily and cumulative rewards across different tool action sequences.
 
-Keep root `app.js` as the entry point during extraction. Preserve English default, bilingual state, appearance, and direct local opening. Do not switch to module loading that breaks `file://` access; choose and verify loading mechanics when extraction begins. Do not add a framework or build step merely to populate the folders.
+Implement the versioned environment and fixed replenishment rule in `research/src/little_signal_shop/`. Expose a small reset/observe/step interface with legal actions and transition rewards. Settle each operating day once and model day 90 as final delivery, sales, and valuation.
 
-Gate: identical state/actions/configuration/exogenous inputs yield identical receipts and next state in headless and browser execution. Cover fees, no-stock days, insufficient cash, in-transit orders, delivery dates, terminal valuation, and replay isolation. Browser regression checks still pass, including language changes during paused playback and research.
+- Verify the worked example and the change in orders caused by each tool's signal. Check no-stock days, cash limits, prepaid stock, delivery dates, and terminal valuation.
+- Check both tool orders, exact-cutoff completion, a tool that would overrun the cutoff, exhausted budgets, repeated calls, early `STOP`, and next-day reset. Check that day 90 settles without an extra purchasing decision.
+- Run complete episodes on saved market inputs. Verify market draws are shared across policies, observations exclude hidden inputs, and the cash, inventory, and reward ledger reconciles.
 
-## Phase 3 — Build Python and establish baselines
+Phase 2 is complete when deterministic fixtures and complete-episode checks pass independently of the browser.
 
-Implement the specified environment in `research/src/little_signal_shop/`. First reproduce the chosen compatibility contract; introduce research changes as a separately identified version rather than silently updating the reference.
+## Phase 3 — Run the baseline comparison
 
-- Keep environment execution independent of rendering and language-model calls. Expose a small reset/observe/step interface with documented legal actions, rewards, and termination semantics.
-- Run complete episodes against shared reference fixtures, including different tool orders, early stopping, exhausted budgets, cash constraints, replenishments, and day 90. Compare observations, receipts, inventory, cash, and accumulated rewards; use exact integer currency where specified and documented tolerances elsewhere.
-- Implement no-tools, fixed-order full-budget, and fixed-rule tool controllers. All use the same operational business policy, observation access, daily budgets, initial assets, horizon, and accounting.
-- Store environment and experiment configuration in `research/configs/`. Split training, validation/tuning, and held-out evaluation markets; save actual seed lists and version identifiers. Do not treat the three demonstration seeds as a held-out research set.
-- Produce per-episode metrics and records, paired results on matched market inputs, run metadata, and a command/script that reproduces a small baseline comparison. Fix the tuning budget and baseline rules before evaluating the learned controller.
+Delivered in the [baseline development report](baseline-v1-results.md) and [frozen evaluation protocol](../contracts/evaluation-v1.md). The comparison completed 72 episodes on 24 validation markets and reproduced from the archived market rows. `uncertainty_threshold` is the frozen primary reference.
 
-Gate: full-episode parity and accounting/observation tests pass. Baseline runs reproduce from saved configuration and inputs. A frozen evaluation protocol exists before DQN tuning starts. Python will own research execution after the compatibility gate; the browser may consume exported records instead of maintaining a second training engine.
+- Implement immediate `STOP`, a fixed-order controller that uses feasible calls, and a fixed-rule or uncertainty-threshold controller. All share the operational policy, observation interface, daily limits, initial assets, horizon, and accounting. Document the fixed order, thresholds, and tuning budget.
+- Store environment and experiment configurations in `research/configs/`. Save separate lists of training, validation/tuning, and held-out evaluation markets, with the input model version.
+- Produce per-episode metrics and records, paired results on matched development markets, run metadata, and a command that reproduces a small baseline comparison.
+
+Phase 3 is complete when baseline runs reproduce from saved configurations and inputs. Freeze the comparison protocol before deep Q-network tuning starts.
 
 ## Phase 4 — Implement and train the tool-selection DQN
 
-Use a conventional Deep Q-Network implementation; selecting a maintained library or a small implementation is a phase-level decision. The controller chooses tools or stopping, not a replacement procurement/pricing policy.
+Use a conventional Deep Q-Network implementation for the two tool actions and `STOP`. The fixed replenishment rule continues to place orders.
 
 - Encode only permitted observations and legal actions. Apply the same action constraints during exploration, greedy action choice, and target calculation.
-- Specify network, optimizer, exploration schedule, replay-buffer sampling, target updates, reward scale, training budget, checkpoint selection, and discount/time convention in saved configuration.
+- Save the network, optimizer, exploration schedule, replay-buffer sampling, target updates, reward scale, training budget, and checkpoint selection in configuration. Use a discount factor of 1 for the fixed 90-day objective so an extra tool action cannot change the discount on later rewards.
 - Begin with short smoke runs that verify valid actions, finite losses, terminal handling, checkpoint round trips, and reward accounting. A decreasing training loss alone is not evidence of better business decisions.
 - Train across multiple learning seeds. Select settings/checkpoints using validation markets only. Preserve failed runs and record changes instead of tuning against the held-out evaluation markets.
 
@@ -107,15 +97,15 @@ Gate: the training procedure runs reproducibly within the available compute budg
 
 Evaluate frozen controllers on held-out markets using the same environment version and matched exogenous conditions. Separate variation across learning seeds from variation across market episodes.
 
-Report final net worth, information charges and call counts, unfilled orders, remaining inventory, and bankruptcy only where defined. Include paired differences, uncertainty intervals, seed counts, and the exact comparison configuration. Vary forecast reliability, volatility, and tool cost under a documented protocol; reserve any extra tuning for validation data.
+Report final net worth, information charges and call counts, unfilled orders, and remaining inventory. Report paired differences and confidence intervals based on matched markets, seed counts, and the exact comparison configuration. Preserve market pairing when estimating intervals, and account for multiple training seeds. Vary signal reliability, volatility, and tool cost in documented sensitivity runs. Use validation data for tuning.
 
-Keep learning progress separate from 90-day business trajectories. Inspect recorded decisions for leakage, accounting exploits, repeated/invalid calls, and excessive dependence on one market pattern. Report negative or inconclusive results and simplified assumptions. Save raw episode summaries and run metadata before generating figures or writing conclusions.
+Keep learning progress separate from 90-day business trajectories. Inspect decision records to see which signals changed orders and whether those changes helped after fees. Check for information leakage, accounting errors, illegal calls, and dependence on one market pattern. Report negative or inconclusive results and simplified assumptions. Save raw episode summaries and run metadata before generating figures or writing conclusions.
 
 Gate: another run can regenerate the comparison tables/figures from saved inputs and checkpoints. Every reported result identifies its environment, configuration, code revision, controller, and seed sets. Any environment correction invalidates and reruns affected comparisons.
 
 ## Phase 6 — Connect research records to the game
 
-Add an import/validation path for exported episode records, initially from local files. A backend and persistent database are not prerequisites.
+After the first experiment is reported, add a local import and validation path for exported episode records. Extract browser modules as needed for presentation and playback.
 
 - Validate schema/environment versions and required fields. Identify source controller, market seed/input identifier, and the configuration that produced the result.
 - Link Research Lab summaries to the recorded episodes. Separate training curves, evaluation trajectories, and the existing demonstration results.
@@ -128,4 +118,4 @@ Gate: imported receipts reconcile with their source runs; replay leaves live cas
 
 See [src](../src/README.md), [research](../research/README.md), [contracts](../contracts/README.md), [tests](../tests/README.md), [scripts](../scripts/README.md), and [artifacts](../artifacts/README.md) for ownership. Existing root web files remain active. `.gitkeep` files only retain reserved empty directories in Git.
 
-The next implementation task is Phase 1: specify a complete worked tool/stop/day-settlement example, the cash/inventory/reward ledger, supplier-analysis semantics, and reproducible exogenous inputs. Then capture characterization fixtures and begin one small JavaScript extraction. Do not implement all future folders at once.
+Phase 4 implements and trains the DQN using the frozen seed splits, selection budget, and validation procedure. Preserve the selected checkpoints for the held-out comparison.

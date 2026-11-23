@@ -4,17 +4,17 @@
 
 A research project studying when an autonomous e-commerce agent should acquire information, which tool it should use, and when it should stop investigating under uncertainty and cost.
 
-**Current deliverable:** Little Signal Shop, a standalone browser prototype with an animated warehouse, a research workbench, and read-only business replay. The repository also contains an initial phased implementation plan and a directory scaffold for future research code.
+**Current deliverables:** Little Signal Shop, a standalone browser prototype with an animated warehouse, research workbench, and read-only business replay, and a tested headless Python environment for the first experiment.
 
-**Status:** Deep Q-Network (DQN) training and the Python research environment are not implemented. The browser comparisons illustrate three fixed policies in a simplified simulation; they are not validated research findings or evidence of learned-agent performance.
+**Status:** Phases 1–3 are complete. The Python baseline comparison ran on 24 matched validation markets and froze `uncertainty_threshold` as the primary reference. Deep Q-Network (DQN) training and held-out evaluation follow. The browser comparisons illustrate three fixed policies in the demonstration simulation.
 
 ## Research direction
 
 The working research title is *RL-Guided Adaptive Tool Selection for Long-Horizon Autonomous E-Commerce Agents* (CPTS 580, Topic B: New Application).
 
-The planned controller selects among demand forecasting, market research, supplier analysis, inventory analysis, pricing analysis, and stopping. A separate, fixed business policy handles procurement and pricing so comparisons can isolate tool selection. The evaluation plan calls for matched market conditions, multiple training seeds, held-out evaluation markets, and explicit information costs.
+The first experiment runs in Python with one product, a fixed selling price, and a 90-day horizon. The controller chooses between a same-day market report, a next-day demand forecast, and stopping. All compared methods use the same replenishment rule. The evaluation uses matched markets, multiple training seeds, held-out evaluation markets, and paired confidence intervals. The broader business system and browser integration follow the first comparison.
 
-The [agreed project plan](FINAL_PROJECT_PLAN.md) defines the scope and limitations. The [initial implementation plan](docs/implementation-plan.md) proposes the phases and completion gates.
+The [project plan](FINAL_PROJECT_PLAN.md) gives the decision clock and a worked example. The [implementation plan](docs/implementation-plan.md) lists phases and acceptance criteria.
 
 ## Run the prototype
 
@@ -39,13 +39,13 @@ All state and histories live in browser memory and reset on refresh. There is no
 ## Implementation phases
 
 1. Specify environment, observation, action, accounting, reward, randomness, and record contracts.
-2. Extract a JavaScript reference simulation while preserving the browser prototype.
-3. Build the Python environment, establish cross-language parity, and reproduce baseline comparisons.
+2. Build the headless Python environment and check it against deterministic fixtures.
+3. Reproduce the three baseline comparisons and freeze the evaluation protocol.
 4. Implement and train the DQN tool-selection controller.
 5. Evaluate on held-out markets and report uncertainty, failures, and limitations.
-6. Import research episode records into the existing Research Lab and Business Replay.
+6. After the first report, import research episode records into the existing Research Lab and Business Replay.
 
-Only the prototype preservation and directory scaffold are complete. The remaining phases are proposals; see the [implementation plan](docs/implementation-plan.md) for completion criteria.
+The prototype and Phases 1–3 are complete. See the [baseline results](docs/baseline-v1-results.md), [frozen evaluation protocol](contracts/evaluation-v1.md), and [Python usage and test guide](research/README.md).
 
 ## Repository structure
 
@@ -53,17 +53,17 @@ Only the prototype preservation and directory scaffold are complete. The remaini
 index.html / styles.css / i18n.js / app.js   Active browser prototype
 FINAL_PROJECT_PLAN.md                       Agreed research direction
 docs/implementation-plan.md                  Proposed implementation phases
-contracts/                                  Reserved shared specifications and schemas
+contracts/                                  Research environment and episode record specifications
 src/                                        Reserved browser module extraction
-research/configs/                           Reserved research configuration
-research/src/little_signal_shop/             Reserved Python environment and controllers
-tests/                                      Reserved browser, contract, research, and fixture checks
+research/configs/                           Frozen environment settings and seed splits
+research/src/little_signal_shop/             Python environment, fixed policy, and baseline runner
+tests/                                      Python verification and deterministic fixtures
 scripts/                                    Reserved project commands
 artifacts/                                  Ignored generated output; README remains tracked
 CODEX_SETUP_INSTRUCTIONS.md                  Historical local/GitHub setup instructions
 ```
 
-Reserved directories contain explanatory READMEs or `.gitkeep` files, not completed implementations. No dependency installation or training command is provided yet. The original local checkout may remain named `little-signal-shop` after the GitHub repository rename.
+The research environment and its tests use only the Python standard library. The original local checkout may remain named `little-signal-shop` after the GitHub repository rename.
 
 ## Verification and limitations
 

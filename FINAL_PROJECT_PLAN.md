@@ -1,28 +1,28 @@
 # Little Signal Shop: Agreed Project Plan
 
-Last updated: October 31, 2026
+Last updated November 23, 2026, following feedback on the extended abstract.
 
 Working research title: **RL-Guided Adaptive Tool Selection for Long-Horizon Autonomous E-Commerce Agents**
 
 Course classification: **CPTS 580, Topic B: New Application**
 
-This document records the decisions made in the project discussion. It distinguishes the intended research system from the working browser prototype. Features described as planned are not completed results or validated design choices.
+This plan defines the first controlled experiment and the later application roadmap. The [versioned environment specification](contracts/environment-v1.md) gives the settings implemented and tested in Python.
 
 ## 1. Main decision
 
-Build an autonomous agent that operates a simulated online retail business, with a game-like interface that makes its decisions and their consequences visible.
+Start with a Python experiment that runs without a graphical interface. Use one product, two paid information tools, and a fixed replenishment rule over a 90-day episode. The existing browser prototype provides a demonstration of the broader application. Expand the business system and connect the research records to the interface after the first controlled comparison.
 
 Keep **Adaptive Tool Selection** as the single primary research direction. Study whether reinforcement learning can improve long-term business outcomes by learning when to gather information, which tool to use, and when to stop investigating.
 
-The shop is the experimental environment. The research question concerns information acquisition under uncertainty and cost. The project does not require inventing a new reinforcement learning algorithm or training a large language model.
+The shop provides a test of information acquisition under uncertainty and cost. Use an existing reinforcement learning method for the first experiment.
 
 ## 2. Engineering scope
 
-The intended business system covers product procurement and launches, inventory and replenishment, pricing, promotions, orders, returns, cash flow, and operating expenses. The environment should represent uncertain demand, competition, supplier constraints, and market events over a 90-day business episode.
+The first environment models uncertain daily demand, sales from stock, lost sales, cash, and prepaid replenishment that arrives the next morning. Hold the selling price and unit purchase cost fixed within a run. The broader application can add multiple products, supplier and pricing decisions, competition, launches, promotions, returns, and operating expenses later.
 
-The main visual direction is **Warehouse Theatre**: a warm, toy-like packing studio for an online shop, with shelves, a packing desk, a small robot manager, incoming supplies, and courier vans. Customers appear through online orders and messages.
+The later application follows the existing **Warehouse Theatre** design, a toy-like packing studio with shelves, a packing desk, a robot manager, incoming supplies, and courier vans. Customers appear through online orders and messages.
 
-Three sections share one application:
+The application has three sections.
 
 | Section | Purpose |
 | --- | --- |
@@ -38,63 +38,72 @@ The interface starts in **English** and includes a visible **English/Chinese** s
 
 ## 3. Research question and control boundary
 
-Research question:
-
 > Can reinforcement learning improve long-term profitability and decision efficiency by learning when and which information-gathering tools to use under uncertain market conditions and information costs?
 
-The tool-selection controller gathers information. A separate business policy turns the available information into procurement, pricing, and other operational decisions.
+### First-experiment tools and fixed business policy
 
-The decision flow is:
+Each tool returns a noisy estimate. All controllers start with the same public estimates of today's and tomorrow's demand. Within a day, the result from each tool replaces the corresponding public estimate and expires at the next day's opening. The environment samples demand independently of the controller's actions.
 
-1. Observe the information currently available to the agent.
-2. Invoke an information tool or stop investigating.
-3. Charge the tool's cost and time, and update the available observations.
-4. Repeat within the daily tool budget, or stop at the budget limit.
-5. Pass the available information to the business policy.
-6. Execute operational decisions and settle the simulated business outcomes.
+| Tool | Observation returned | Default fee and duration | How the fixed rule uses it |
+| --- | --- | --- | --- |
+| Same-day market report | Updated estimate of today's demand | $1 and 30 simulated minutes | Updates expected sales today and therefore estimated stock left for tomorrow |
+| Next-day demand forecast | Updated estimate of tomorrow's demand | $2 and 60 simulated minutes | Updates the stock target for tomorrow |
 
-The five information tools are demand forecasting, market research, supplier analysis, inventory analysis, and pricing analysis. Their outputs should be related to market or business conditions but may be noisy, incomplete, or stale. Tools can incur monetary costs and decision delays.
+The fixed order-up-to rule projects next morning's stock by subtracting expected sales today from current on-hand stock. Expected sales are capped at current stock. The rule orders the positive difference between the next-day demand estimate and projected stock, capped at what the remaining cash can buy. Use nonnegative integer demand estimates and whole units. The same rule and selling price apply in every comparison. A tool provides information and consumes money and time. Replenishment lead time and realized demand follow the environment schedule.
 
-The prototype uses a maximum of two calls per day. The research implementation should make the budget explicit and apply the same budget to all compared methods.
+### Decision clock and resumption
+
+1. At 09:00 on days 1–89, post any deliveries due that morning and issue the public observations. The controller chooses a legal tool or `STOP`.
+2. A call pays its fee from cash and advances the simulated clock by its full duration. When the result arrives, the controller receives the observation and chooses again. Each tool can be called once per day, for at most two calls. A tool is eligible only if its fee is affordable and it can finish by 10:30. A result arriving at 10:30 is usable. When no tool is eligible, the remaining action is `STOP`.
+3. `STOP` is available throughout the decision window. It invokes the fixed replenishment rule once and places any prepaid order for the next morning. The environment then advances to the day's sales and settlement. The controller resumes at 09:00 the next day after deliveries and the new public observations.
+4. Day 90 receives due inventory, settles sales, and values remaining stock. The episode ends after settlement. The final day has no tool or procurement decision because both tools inform replenishment for the next morning.
 
 ## 4. Learning method and agent architecture
 
-Use an existing lightweight algorithm, provisionally a **Deep Q-Network (DQN)**, for the external tool-selection controller. Its discrete actions are the five tool choices and stopping.
+Use an existing lightweight algorithm, provisionally a **Deep Q-Network (DQN)**. The controller's three discrete actions are the market report, the demand forecast, and `STOP`.
 
-The planned observation includes visible sales and demand indicators, inventory, cash, liabilities where supported, previously acquired information and its age, remaining operating time, and the tool budget. Hidden market truth and future outcomes must not be supplied directly to the policy.
+The controller observes permitted sales history and public demand estimates, current stock and cash, the results of completed calls, remaining days, the current clock, and the remaining tool budget. The environment keeps actual demand for the current day private until settlement and keeps future market outcomes private. The same observation rules apply to every method.
 
 For controlled training and evaluation, hold the operational business policy fixed. This helps isolate the effect of tool selection. All baselines must use that same business policy.
 
-The complete engineering system should support an autonomous, tool-using business agent. A pretrained large language model may assist planning and natural-language explanations during demonstrations. Large language model fine-tuning and repeated paid model calls are not required for large-scale training.
-
-The simulation must run independently of rendering and language-model calls. A lightweight Python environment is the intended research training path. The current JavaScript simulation is a working interface prototype; any later Python implementation must preserve and verify transition, observation, and accounting contracts before results are compared.
+Python is the reference implementation for the first experiment. Validate it against the written rules and expected transitions. The browser prototype has its own simulation. A later demonstration can use Python episode records and, if useful, a pretrained large language model for explanations.
 
 ## 5. Accounting and reward
 
-Planned net worth:
-
 **Net worth = cash + realistically valued inventory - liabilities.**
 
-The reward should track changes in net worth. Inventory should be valued at the lower of acquisition cost and estimated net realizable value, with appropriate reductions for obsolescence or unsalable goods. Buying stock changes cash or liabilities and inventory; it does not create profit simply because inventory exists.
+The first experiment uses cash purchases and zero liabilities. Prepaid in-transit stock and on-hand stock are valued at acquisition cost during the episode, with a fixed selling price above unit cost. At day 90 settlement, value leftover stock at the lower of acquisition cost and the configured net realizable value. This terminal write-down is applied once.
 
-Record tool charges, operating costs, holding costs, and procurement consistently. A charge already included in the ledger must not be subtracted again as a separate reward penalty.
+The reward at each transition is the change in net worth. A tool fee reduces cash once. A prepaid purchase exchanges cash for in-transit inventory at cost, and arrival transfers it to on-hand inventory. Sales increase cash and remove the carrying value of sold stock. The undiscounted sum of rewards equals final net worth minus initial net worth. The first ledger excludes operating and holding costs.
 
-The prototype currently has cash, prepaid incoming inventory, holding and operating charges, and a simple 20% ending inventory discount. It does not implement the full planned liabilities and net-realizable-value model. That discount is a demonstration assumption, not a validated financial model.
+### Worked example
+
+Consider days 89 and 90 of a hypothetical episode. On day 89 at 09:00 the shop has $100 cash, five units in stock valued at $5 each, and no deliveries due. Public demand estimates are zero today and five tomorrow. The selling price is $9. In both branches, realized demand is zero on day 89 and eight on day 90.
+
+| Event | Stop at 09:00 | Buy the next-day forecast, then stop at 10:00 |
+| --- | --- | --- |
+| Opening net worth | $100 cash + $25 stock = $125 | $100 cash + $25 stock = $125 |
+| Decision-time information | Target five and projected stock five | Forecast raises target to eight. Projected stock stays five |
+| Day 89 procurement and settlement | Order zero. Net worth stays $125 | Pay the $2 fee and prepay $15 for three units. Net worth is $83 cash + $25 on hand + $15 in transit = $123 |
+| Day 90 arrival and sales | Sell five units for $45. Three orders go unfilled | Receive three units and sell eight for $72. Fill all eight orders |
+| Final net worth and cumulative reward from day 89 opening | $145 net worth and +$20 reward | $155 net worth and +$30 reward |
+
+The forecast changes the order from zero to three under the same fixed rule. The three extra sales earn $12 in gross margin and the fee costs $2, for a net $10 gain in this example. The tool's reward effect starts at −$2 on day 89. The additional margin arrives on day 90. If the forecast had left the order unchanged on this trajectory, the fee alone would reduce net worth by $2. Check both the decision change and the eventual financial effect when interpreting a tool call.
 
 ## 6. Evaluation plan
 
-Compare complete tool-selection policies across repeated business episodes. The required baselines are:
+Compare four tool-selection policies across repeated business episodes.
 
 1. No additional information gathering.
-2. Using available tools whenever the shared budget permits, with an explicit fixed call order.
+2. Using feasible tools in a fixed order within the shared time, call, and cash constraints.
 3. Fixed-rule or uncertainty-threshold tool selection.
 4. The learned controller, once implemented and trained.
 
 An LLM-only tool-selection policy is optional if resources permit.
 
-Use multiple training seeds for the learning algorithm and held-out market seeds for evaluation. Match exogenous market conditions across compared policies. Keep the business policy, initial assets, budgets, operating horizon, and accounting rules consistent.
+Use multiple training seeds for the learning algorithm and held-out market seeds for evaluation. Match exogenous market conditions across compared policies. Keep the business policy, initial assets, budgets, operating horizon, and accounting rules consistent. Separate training, validation, and evaluation markets.
 
-Measure mean final net worth, information costs and call frequency, unfilled orders, unsold inventory, and bankruptcy rate where termination mechanics support it. Report variability and paired comparison uncertainty. Vary forecast reliability, market volatility, and tool cost.
+Measure mean final net worth, information costs and call frequency, unfilled orders, and unsold inventory. Report paired differences and confidence intervals using matched market seeds. To check whether the fixed rule used a tool's information, recompute the order for a recorded decision with that tool's estimate replaced by the public estimate, while keeping the post-fee cash and all other inputs fixed. Vary signal reliability, market volatility, and tool cost in documented sensitivity runs after the main comparison. Bankruptcy metrics can follow an explicit insolvency model.
 
 Market uncertainty and delayed effects make it difficult to attribute 90-day profit to one tool call. Evaluate whole policies and use recorded trajectories for interpretation. Do not assume that the learned controller will outperform well-tuned rules.
 
@@ -111,6 +120,8 @@ Record the tool observations, fees, time consumed, operational decisions, invent
 Replay the recorded receipt rather than re-running the market. Preserve the current shop's state throughout replay. Experiment configuration changes must not silently relabel old results; identify the configuration that actually produced them.
 
 ## 8. Current implementation
+
+The Python environment implements the one-product clock, both information tools, the fixed replenishment rule, daily settlement, and versioned episode records. Tests cover full 90-day episodes on identical saved inputs. The [baseline comparison](docs/baseline-v1-results.md) ran three controllers on 24 matched validation markets and selected `uncertainty_threshold` as the primary reference under the [frozen evaluation protocol](contracts/evaluation-v1.md).
 
 The packaged prototype currently includes:
 
@@ -131,16 +142,14 @@ Only explore these if the main implementation and evaluation are complete and ti
 
 - **Adaptive Strategy Selection:** choosing or switching between higher-level business strategies such as growth, profitability, exploration, and financial survival.
 - **Reward Design / Credit Assignment:** investigating how different reward mechanisms help the controller learn from financial effects that appear later.
+- **Broader tools and operations:** add supplier, inventory, and pricing analysis when the expanded operating rules can use their outputs.
 
 These are optional extensions, not parallel primary research objectives or promised deliverables. Visual shop growth, customer stories, and cosmetic unlocks are possible game-design additions; they are not implemented commitments.
 
 ## 10. Next implementation steps
 
-1. Preserve the bilingual prototype and this plan in a GitHub repository.
-2. Separate the simulation, information tools, business policy, controller interface, and replay records into maintainable modules.
-3. Validate accounting, delivery timing, observation boundaries, seed control, and equivalent headless execution.
-4. Build the research training environment and implement the DQN controller.
-5. Train, evaluate against the baselines on held-out markets, and document limitations and actual results.
-6. Connect recorded research episodes to the game interface for demonstrations.
+1. Train the tool-selection DQN with multiple seeds under the frozen evaluation protocol.
+2. Evaluate on held-out markets and report paired differences, confidence intervals, and limitations.
+3. Import recorded research episodes into the game interface as a follow-up.
 
 For the course extended abstract, retain the five-section structure, a maximum of one page of main text, 11-point font, single-column layout, and single spacing. References may occupy a separate page. Describe planned work honestly and do not present simulated UI examples as completed research results.

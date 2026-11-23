@@ -1,6 +1,6 @@
 # Browser implementation
 
-Reserved for the staged extraction described in [the implementation plan](../docs/implementation-plan.md). These directories contain no extracted runtime code yet. The active application remains root `index.html`, `styles.css`, `i18n.js`, and `app.js`.
+Reserved for browser module extraction as needed during [research record integration](../docs/implementation-plan.md#phase-6--connect-research-records-to-the-game). These directories contain no extracted runtime code yet. The active application remains root `index.html`, `styles.css`, `i18n.js`, and `app.js`.
 
 | Directory | Intended responsibility |
 | --- | --- |

@@ -4,17 +4,17 @@
 
 本项目研究自主电子商务智能体（autonomous e-commerce agent）在存在不确定性和成本时，应何时获取信息、选择哪一种工具，以及何时停止调查。
 
-**当前成果：** Little Signal Shop（小信号商店）是可独立运行的浏览器原型（browser prototype），包含仓库动画、研究工作台和只读经营回放（read-only business replay）。仓库（repository）还包含初版分阶段实施计划（phased implementation plan），并为后续研究代码建立了目录骨架（directory scaffold）。
+**当前成果：** Little Signal Shop（小信号商店）是可独立运行的浏览器原型（browser prototype），包含仓库动画、研究工作台和只读经营回放（read-only business replay）。首轮实验所用的无界面 Python 环境（headless Python environment）已实现并通过测试。
 
-**当前状态：** 深度 Q 网络（Deep Q-Network, DQN）训练和 Python 研究环境尚未实现。浏览器中的比较使用简化模拟（simulation）下的三种固定策略（fixed policies），不构成经过验证的研究结论，也不能作为学习型智能体（learned agent）性能的证据。
+**当前状态：** 第 1–3 阶段已完成。Python 基线比较（baseline comparison）使用 24 个匹配的验证市场（matched validation markets），并将不确定性阈值策略（uncertainty-threshold policy）固定为主要比较对象。深度 Q 网络（Deep Q-Network, DQN）训练和留出评估（held-out evaluation）安排在后续阶段。浏览器中的三种固定策略结果来自演示模拟（demonstration simulation）。
 
 ## 研究方向（Research direction）
 
 研究暂定题目为 *RL-Guided Adaptive Tool Selection for Long-Horizon Autonomous E-Commerce Agents*，属于 CPTS 580 的 Topic B: New Application。题目中的强化学习（reinforcement learning, RL）描述计划中的研究方法。
 
-计划中的控制器（controller）在需求预测（demand forecasting）、市场调查（market research）、供应商分析（supplier analysis）、库存分析（inventory analysis）、定价分析（pricing analysis）和停止调查之间选择。独立且固定的经营策略（business policy）负责采购与定价，使比较能够聚焦工具选择的影响。评估计划（evaluation plan）要求匹配市场条件、采用多个训练随机种子（training random seeds）、使用留出市场（held-out markets），并明确计入信息成本。
+首轮实验（initial experiment）在 Python 中运行，只模拟一种商品、固定售价和 90 天经营期。控制器（controller）在当日市场快报（same-day market report）、次日需求预测（next-day demand forecast）和停止调查之间选择。各方法共用固定补货规则（fixed replenishment rule）。评估使用匹配的市场条件、多个训练随机种子（training seeds）、留出市场（held-out markets）和配对置信区间（paired confidence intervals）。完整经营系统和浏览器集成（browser integration）安排在首轮比较之后。
 
-[项目总计划](FINAL_PROJECT_PLAN.md)记录约定的研究范围和限制；[初版实施计划](docs/implementation-plan.md)提出阶段安排及完成标准。两份计划目前以英文维护。
+[项目总计划](FINAL_PROJECT_PLAN.md)给出决策时钟（decision clock）和结算算例（worked example）。[实施计划](docs/implementation-plan.md)列出各阶段及验收标准（acceptance criteria）。两份计划目前以英文维护。
 
 ## 运行原型（Run the prototype）
 
@@ -39,31 +39,31 @@ Lucide 1.17.0 图标（icons）通过固定版本的 unpkg 地址加载。如果
 ## 实施阶段（Implementation phases）
 
 1. 明确环境、观察、动作、会计、奖励、随机性和记录的规则约定（contracts）。
-2. 提取 JavaScript 参考模拟（reference simulation），保持浏览器原型可用。
-3. 建立 Python 环境，验证跨语言一致性（cross-language parity），并复现基线比较（baseline comparisons）。
+2. 建立无需界面的 Python 环境（headless Python environment），用确定性测试样例（deterministic fixtures）核对结果。
+3. 复现三种基线策略（baseline policies）的比较，并冻结评估方案（evaluation protocol）。
 4. 实现并训练深度 Q 网络（Deep Q-Network, DQN）工具选择控制器（controller）。
 5. 在留出市场（held-out markets）上评估，报告不确定性、失败情况与限制。
-6. 将研究回合记录（episode records）导入现有研究实验室和经营回放页面。
+6. 首轮报告完成后，将研究回合记录（episode records）导入现有研究实验室和经营回放页面。
 
-目前仅完成原型保留和目录骨架（directory scaffold）；其余阶段仍为提案。具体完成标准见[实施计划](docs/implementation-plan.md)。
+原型和第 1–3 阶段已完成。详见[基线结果](docs/baseline-v1-results.md)、[冻结版评估方案（frozen evaluation protocol）](contracts/evaluation-v1.md)和 [Python 运行与测试说明](research/README.md)。
 
 ## 仓库结构（Repository structure）
 
 ```text
 index.html / styles.css / i18n.js / app.js   当前浏览器原型
 FINAL_PROJECT_PLAN.md                       约定的研究方向
-docs/implementation-plan.md                  初版实施阶段
-contracts/                                  预留共享规则约定与数据模式
+docs/implementation-plan.md                  实施阶段和验收标准
+contracts/                                  研究环境与回合记录规范
 src/                                        预留浏览器模块拆分
-research/configs/                           预留研究设置
-research/src/little_signal_shop/             预留 Python 环境与控制器
-tests/                                      预留浏览器、规则、研究与参考样例检查
+research/configs/                           冻结版环境设置与随机种子划分
+research/src/little_signal_shop/             Python 环境、补货规则与基线比较程序
+tests/                                      Python 验证与确定性测试样例
 scripts/                                    预留项目命令
 artifacts/                                  忽略生成产物，保留目录说明
 CODEX_SETUP_INSTRUCTIONS.md                  原始本地与 GitHub 设置说明
 ```
 
-预留目录包含说明文件或 `.gitkeep` 占位文件（placeholder files），并不代表相应实现已完成。目前没有需要执行的依赖安装（dependency installation）或训练命令。GitHub 仓库改名后，本地目录可继续使用 `little-signal-shop`。
+研究环境与测试只使用 Python 标准库（standard library）。GitHub 仓库改名后，本地目录可继续使用 `little-signal-shop`。
 
 ## 验证与限制（Verification and limitations）
 
