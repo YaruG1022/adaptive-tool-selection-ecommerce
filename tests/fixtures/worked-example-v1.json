@@ -1,0 +1,40 @@
+{
+  "config": {
+    "days": 2,
+    "opening_cash_cents": 10000,
+    "opening_stock": 5
+  },
+  "market_days": [
+    {"demand": 0, "public_today": 0, "public_tomorrow": 5, "market_report": 0, "forecast": 8},
+    {"demand": 8}
+  ],
+  "input_id": "092729e2eb2d5325f2b5724d730e86919843037843b1b03b1c4520ff2c5b8f2e",
+  "cases": [
+    {
+      "controller_id": "no_tools",
+      "actions": ["stop"],
+      "rewards_cents": [2000],
+      "final_net_worth_cents": 14500,
+      "closing_cash_cents": [10000, 14500],
+      "closing_inventory_value_cents": [2500, 0],
+      "closing_net_worth_cents": [12500, 14500],
+      "orders": [0, 0],
+      "arrivals": [0, 0],
+      "sales": [0, 5],
+      "unfilled": [0, 3]
+    },
+    {
+      "controller_id": "forecast_then_stop",
+      "actions": ["forecast", "stop"],
+      "rewards_cents": [-200, 3200],
+      "final_net_worth_cents": 15500,
+      "closing_cash_cents": [8300, 15500],
+      "closing_inventory_value_cents": [4000, 0],
+      "closing_net_worth_cents": [12300, 15500],
+      "orders": [3, 0],
+      "arrivals": [0, 3],
+      "sales": [0, 8],
+      "unfilled": [0, 0]
+    }
+  ]
+}
